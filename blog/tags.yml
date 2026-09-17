@@ -1,19 +1,19 @@
-facebook:
-  label: Facebook
-  permalink: /facebook
-  description: Facebook tag description
+changes-server:
+  label: Server Changes
+  permalink: /changes-server
+  description: Changes that affect DAHVI's server-side code, including backend logic, database schema, and API endpoints.
 
-hello:
-  label: Hello
-  permalink: /hello
-  description: Hello tag description
+changes-client:
+  label: Client Changes
+  permalink: /changes-client
+  description: Changes that affect DAHVI's mobile application.
 
-docusaurus:
-  label: Docusaurus
-  permalink: /docusaurus
-  description: Docusaurus tag description
+changes-docs:
+  label: Documentation Changes
+  permalink: /changes-docs
+  description: Changes that affect DAHVI's documentation, including user guides, API references, and tutorials.
 
-hola:
-  label: Hola
-  permalink: /hola
-  description: Hola tag description
+changes-max:
+  label: Max/MSP Changes
+  permalink: /changes-max
+  description: Changes that affect DAHVI's Max/MSP integration and related code.
