@@ -9,3 +9,17 @@ entries:
     emoji: 🔧
     label: Maintenance
     message: Redo changelog workflow.
+- id: 2
+  pr: 18
+  author: shackhorn
+  time: '2026-09-17T19:19:38+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/18
+  changes:
+  - type: feature
+    emoji: ✨
+    label: Feature
+    message: The changelog will now aggregate every 6 hours and create a blog post!
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Started customizing the documentation website.
