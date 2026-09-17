@@ -55,7 +55,13 @@ POST_AUTHOR = "TeamAudiaptic"
 # in this map are simply omitted, so an incomplete map can't break the build.
 # If a day has no mapped contributors, POST_AUTHOR is used alone.
 AUTHOR_MAP = {
-    # "lhw2837": "shack",
+    "shackhorn": "Liam",
+    "dcr8024": "Darren",
+    "cpw9783": "Chris",
+    "ejs8021": "Elijah",
+    "fangkristen": "Kristen",
+    "TashiTseten": "Tashi",
+    "josh-mitch": "Josh",
 }
 
 # Tags applied to every generated post. Add them to blog/tags.yml to avoid
@@ -73,6 +79,14 @@ REPOS = OrderedDict([
     ("audiaptic-max", "Max/MSP"),
     ("audiaptic-docs", "Docs"),
 ])
+
+# Repo -> Post Tags. Maps a repo to one or more tags that will be applied to every post containing changes from that repo. Used to categorize the changelog entries.
+REPO_TAGS = {
+    "Server": ["changes-server"],
+    "Client": ["changes-client"],
+    "Max/MSP": ["changes-max"],
+    "Docs": ["changes-docs"],
+}
 
 # Fallback display for entries written before emoji/label were stored.
 TYPE_LABEL = {
@@ -209,6 +223,18 @@ def post_authors(day_tree):
     mapped = sorted({AUTHOR_MAP[login] for login in logins if login in AUTHOR_MAP})
     return mapped or [POST_AUTHOR]
 
+def collect_post_tags(day_tree):
+    """Collect unique tags for a day's frontmatter based on the repos in day_tree."""
+    tags = set(TAGS)  # Start with the default tags
+
+    print(f"Processing day tree: {day_tree.keys()}")
+    for repo in day_tree.keys():
+        print(f"Processing repo: {repo}")
+        if repo in REPO_TAGS:
+            print(f"Adding tags for repo {repo}: {REPO_TAGS[repo]}")
+            tags.update(REPO_TAGS[repo])
+
+    return sorted(tags)
 
 def render_post(day, day_tree):
     repo_h = "#" * HEADING_BASE
@@ -230,7 +256,7 @@ def render_post(day, day_tree):
         "slug: %s-%s" % (SLUG_SUFFIX, day),
         "title: 'Changelog: %s'" % pretty_date(day),
         "authors: [%s]" % ", ".join(post_authors(day_tree)),
-        "tags: [%s]" % ", ".join(TAGS),
+        "tags: [%s]" % ", ".join(collect_post_tags(day_tree)),
         "date: %s" % day,
         "---",
         "",
