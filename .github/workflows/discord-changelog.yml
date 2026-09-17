@@ -1,0 +1,62 @@
+name: Discord Changelog
+
+# Pulls the day's changelog post from the docs repo and sends it to the Discord webhook. 
+# Ex: blog/2026-09-17-changelog.mdx -> https://discord.com/api/webhooks/...
+# Uses tsickert/discord-webhook@v7.0.0
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # every day at midnight
+  workflow_dispatch:     # plus a "Run workflow" button for when you want it now
+
+concurrency:
+  group: discord-changelog
+  cancel-in-progress: true
+
+env:
+  # Must match BLOG_DIR in .github/scripts/aggregate_changelog.py
+  BLOG_DIR: blog
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+jobs:
+  discord:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out docs
+        uses: actions/checkout@v4
+
+      # - name: Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.12'
+      
+      # - name: Install dependencies
+      #   run: pip install pyyaml
+      - name: Get changelog content
+        id: get_changelog
+        run: |
+          # Get yesterday's date in YYYY-MM-DD format
+          YESTERDAY=$(date -d "yesterday" +%Y-%m-%d)
+          BLOG_FILE="${{ env.BLOG_DIR }}/${YESTERDAY}-changelog.mdx"
+          
+          if [ -f "$BLOG_FILE" ]; then
+            CONTENT=$(cat "$BLOG_FILE")
+            echo "content<<EOF" >> $GITHUB_ENV
+            echo "$CONTENT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "content<<EOF" >> $GITHUB_ENV
+            echo "No changelog post found for ${YESTERDAY}." >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          fi
+      # Send the changelog to Discord for previous day. If the changelog post for the day doesn't exist, send a message saying so.
+      - name: Send changelog to Discord
+        uses: tsickert/discord-webhook@v7.0.0
+        with:
+          url: ${{ env.DISCORD_WEBHOOK_URL }}
+          username: Audiaptic Changelog
+          content: |
+            ${{ steps.get_changelog.outputs.content }}

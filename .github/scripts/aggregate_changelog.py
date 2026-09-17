@@ -21,7 +21,7 @@ Each generated post looks like:
     {/* truncate */}
 
     ## Server
-    ### @lhw2837
+    ### <name> @lhw2837
     <emoji> **Feature** Per-layer solo and mute [#12](link)
 
 Set ORG and BRANCH below. Nothing else needs configuring.
@@ -275,9 +275,9 @@ def render_post(day, day_tree):
             continue
 
         lines += ["%s %s" % (repo_h, label), ""]
-
+        # <name> (@username) is the format for author headings. If AUTHOR_MAP has a mapping, use that; otherwise, just use the username.
         for author in sorted(day_tree[label], key=str.lower):
-            lines += ["%s @%s" % (author_h, author), ""]
+            lines += ["%s %s (@%s)" % (author_h, AUTHOR_MAP.get(author, author), author), ""]
 
             for record in sorted(day_tree[label][author],
                                  key=lambda r: (type_rank(r), r["time"])):
