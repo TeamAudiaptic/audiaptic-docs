@@ -1,0 +1,65 @@
+name: Changelog
+
+# Fires after a PR is merged and appends its :cl: block to CHANGELOG.yml.
+# Identical in all four Audiaptic repos - no per-repo configuration needed.
+
+on:
+  pull_request_target:
+    types: [closed]
+
+# Serialise runs so two merges landing at once don't race on the same commit.
+concurrency:
+  group: changelog-commit
+  cancel-in-progress: false
+
+jobs:
+  changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # SECURITY: this checks out the BASE branch, never the PR head.
+      # pull_request_target runs with write permissions against the base repo,
+      # so checking out and running code from an untrusted PR here would be an
+      # arbitrary code execution hole. Do not "fix" this to use the PR ref.
+      - name: Check out the base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      # PR text is passed as environment variables, never interpolated into the
+      # shell. A PR title containing backticks or $() cannot do anything here.
+      - name: Record changelog entry
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: python .github/scripts/changelog.py
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet -- CHANGELOG.yml; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.yml
+          git commit -m "Changelog for PR #${PR_NUMBER}"
+          git pull --rebase
+          git push
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
