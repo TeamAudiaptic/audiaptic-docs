@@ -35,21 +35,33 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      - name: Rebuild changelog posts
-        run: python .github/scripts/aggregate_changelog.py
-
-      - name: Commit and push
+      - name: Rebuild and push changelog posts
         run: |
-          git add "$BLOG_DIR"
-
-          if git diff --cached --quiet; then
-            echo "Changelog posts are already up to date."
-            exit 0
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git commit -m "Update changelog"
-          git pull --rebase
-          git push
+          for attempt in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard "origin/$GITHUB_REF_NAME"
+
+            python .github/scripts/aggregate_changelog.py
+
+            git add "$BLOG_DIR"
+
+            if git diff --cached --quiet; then
+              echo "Changelog posts are already up to date."
+              exit 0
+            fi
+
+            git commit -m "Update changelog"
+
+            if git push; then
+              exit 0
+            fi
+
+            echo "Push rejected (attempt $attempt) - resyncing and regenerating."
+            sleep 5
+          done
+
+          echo "Could not push after 3 attempts."
+          exit 1
