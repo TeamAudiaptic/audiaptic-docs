@@ -66,4 +66,4 @@ jobs:
           username: Audiaptic Changelog
           content: |
             ${{ steps.get_changelog.outputs.content }}
-          if: steps.get_changelog.outputs.found == 'true'
+        if: steps.get_changelog.outputs.found == 'true'
