@@ -38,20 +38,26 @@ jobs:
       - name: Get changelog content
         id: get_changelog
         run: |
-          # Get yesterday's date in YYYY-MM-DD format
           YESTERDAY=$(date -d "yesterday" +%Y-%m-%d)
-          BLOG_FILE="${{ env.BLOG_DIR }}/${YESTERDAY}-changelog.mdx"
-          
-          if [ -f "$BLOG_FILE" ]; then
-            CONTENT=$(cat "$BLOG_FILE")
-            echo "content<<EOF" >> $GITHUB_ENV
-            echo "$CONTENT" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          else
-            echo "content<<EOF" >> $GITHUB_ENV
-            echo "No changelog post found for ${YESTERDAY}." >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+          BLOG_FILE="blog/${YESTERDAY}-changelog.mdx"
+
+          if [ ! -f "$BLOG_FILE" ]; then
+            echo "No changelog post for ${YESTERDAY}."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+          CONTENT=$(sed '1,/^---$/d' "$BLOG_FILE" \
+            | sed '/truncate/d' \
+            | sed 's/&#123;/{/g; s/&lt;/</g')
+
+          {
+            echo "content<<CHANGELOG_EOF"
+            echo "$CONTENT"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
       # Send the changelog to Discord for previous day. If the changelog post for the day doesn't exist, send a message saying so.
       - name: Send changelog to Discord
         uses: tsickert/discord-webhook@v7.0.0
