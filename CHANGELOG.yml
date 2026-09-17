@@ -23,3 +23,17 @@ entries:
     emoji: 📝
     label: Documentation
     message: Started customizing the documentation website.
+- id: 3
+  pr: 19
+  author: shackhorn
+  time: '2026-09-17T21:20:40+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/19
+  changes:
+  - type: fix
+    emoji: 🐛
+    label: Fix
+    message: Fix 6-hour posting automation.
+  - type: maintenance
+    emoji: 🔧
+    label: Maintenance
+    message: Changelogs now post to a Discord webhook every day.
