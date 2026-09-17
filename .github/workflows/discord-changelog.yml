@@ -56,7 +56,7 @@ jobs:
       - name: Send changelog to Discord
         uses: tsickert/discord-webhook@v7.0.0
         with:
-          url: ${{ env.DISCORD_WEBHOOK_URL }}
+          webhook-url: ${{ env.DISCORD_WEBHOOK_URL }}
           username: Audiaptic Changelog
           content: |
             ${{ steps.get_changelog.outputs.content }}
