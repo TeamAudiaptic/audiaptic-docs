@@ -59,7 +59,6 @@ jobs:
             echo "CHANGELOG_EOF"
           } >> "$GITHUB_OUTPUT"
       # Send the changelog to Discord for previous day. If the changelog post for the day doesn't exist, send a message saying so.
-        if: steps.get_changelog.outputs.found == 'true'
       - name: Send changelog to Discord
         uses: tsickert/discord-webhook@v7.0.0
         with:
@@ -67,3 +66,4 @@ jobs:
           username: Audiaptic Changelog
           content: |
             ${{ steps.get_changelog.outputs.content }}
+          if: steps.get_changelog.outputs.found == 'true'
