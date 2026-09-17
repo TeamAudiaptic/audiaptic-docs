@@ -41,8 +41,8 @@ import yaml
 # Configuration
 # ---------------------------------------------------------------------------
 
-ORG = "CHANGE-ME"                  # GitHub org or user that owns the repos
-BRANCH = "main"                    # default branch; use "master" if that's yours
+ORG = "TeamAudiaptic"                  # GitHub org or user that owns the repos
+BRANCH = "changelog"                    # default branch; use "master" if that's yours
 
 BLOG_DIR = "blog"                  # Docusaurus blog directory
 SLUG_SUFFIX = "changelog"          # files are <date>-<SLUG_SUFFIX>.mdx
