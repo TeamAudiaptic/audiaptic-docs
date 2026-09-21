@@ -37,3 +37,13 @@ entries:
     emoji: 🔧
     label: Maintenance
     message: Changelogs now post to a Discord webhook every day.
+- id: 4
+  pr: 28
+  author: Josh-mitch
+  time: '2026-09-21T18:36:00+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/28
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Dev Docs section created and Event Schemas doc created
