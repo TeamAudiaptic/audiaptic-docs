@@ -1,0 +1,59 @@
+---
+sidebar_position: 1
+---
+
+# Shared Event Envelope
+
+These pages define the proposed JSON messages Max patches send to the relay server during a performance. The server validates an event and distributes it to every device in the active session. Clients schedule an event locally, so a timestamped event can begin at the same intended moment on every device.
+
+## Status
+
+The baseline schemas to follow are the initial implementation target. It assumes every connected device receives every event.
+
+:::info[Stretch goals: zones and keyframes]
+
+Zone targeting and keyframed effects are documented as planned extensions, but **are not supported yet**. Max patches must not send `target` or `keyframes` fields until those features are implemented by the server and mobile client.
+
+:::
+
+## Envelope Shape
+
+Every event has the following top-level shape:
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "intro-haptic-001",
+  "sequence": 42,
+  "type": "haptic",
+  "timestamp": 1730000000000,
+  "payload": {}
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `schemaVersion` | string | Yes | Schema version. The initial version is `"1.0"`. |
+| `eventId` | string | Yes | A unique identifier for this event within the performance session. |
+| `sequence` | integer | Yes | A monotonically increasing sequence number assigned by Max. It gives clients a deterministic order when two events affect the same output at the same time. |
+| `type` | string | Yes | One of the [supported event types](./event-types). |
+| `timestamp` | integer or `null` | Yes | Unix epoch time in milliseconds at which the client should execute the event. Use `null` for “as soon as received.” |
+| `payload` | object | Yes | Properties specific to `type`. |
+
+The event envelope does not include a session ID: the server determines the session from the authenticated Max connection and distributes the event only within that session.
+
+## Timing and ordering
+
+- Timestamped events should be sent sufficiently before their `timestamp` for the server to relay and clients to queue them. A `null` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
+- Clients execute each event independently. Multiple events with the same timestamp may therefore begin together—for example, a `haptic`, `screen`, and `caption` event.
+- When two events control the same output at the same timestamp, the higher `sequence` value takes precedence. A newer haptic replaces a haptic already playing; a newer screen event replaces the current screen effect.
+- Durations are expressed in milliseconds. A duration ends the event and restores the output to its state immediately before that event, unless a later event has already replaced it.
+
+## Common value rules
+
+| Value | Rule |
+| --- | --- |
+| Time and duration | Non-negative integer milliseconds. |
+| `intensity` and `brightness` | Number from `0` through `1`, inclusive. These are normalized intent values; the mobile app maps them to device capabilities. |
+| `color` | Six-digit sRGB hexadecimal string in the form `"#RRGGBB"`. |
+| Asset alias | A non-empty string registered for the session and downloaded by the device during session join. |

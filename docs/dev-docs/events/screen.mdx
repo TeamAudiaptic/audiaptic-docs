@@ -1,0 +1,28 @@
+---
+sidebar_position: 5
+---
+
+# Screen Event
+
+A `screen` event shows a full-screen solid color at a specified normalized brightness.
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "blue-wash-01",
+  "sequence": 44,
+  "type": "screen",
+  "timestamp": 1730000001200,
+  "payload": {
+    "color": "#0057FF",
+    "brightness": 0.8,
+    "durationMs": 1500
+  }
+}
+```
+
+| Payload field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | string | Yes | Full-screen color. |
+| `brightness` | number | Yes | Normalized brightness/opacity for the color. |
+| `durationMs` | integer | Yes | How long the screen effect remains visible. |

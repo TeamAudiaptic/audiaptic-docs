@@ -1,0 +1,24 @@
+---
+sidebar_position: 10
+---
+
+# Planned Extension: Zone Targets
+
+:::warning[Not supported yet]
+
+All baseline events apply to the full session. The server must reject or ignore `target` until zone routing is implemented.
+
+:::
+
+The planned `target` field will let a Max patch send the same event type to a subset of the audience. It belongs beside `timestamp` in the event envelope:
+
+```json
+{
+  "target": {
+    "kind": "zone",
+    "zoneId": "stage-left"
+  }
+}
+```
+
+`zoneId` values will be defined by the session configuration, not invented by individual Max patches. The implicit baseline target is the complete session.

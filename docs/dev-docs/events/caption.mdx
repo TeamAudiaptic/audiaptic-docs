@@ -1,0 +1,26 @@
+---
+sidebar_position: 6
+---
+
+# Caption Event
+
+A `caption` event displays text over the mobile app. An empty `text` string clears the current caption.
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "caption-01",
+  "sequence": 45,
+  "type": "caption",
+  "timestamp": 1730000001200,
+  "payload": {
+    "text": "Follow the lights",
+    "durationMs": 3000
+  }
+}
+```
+
+| Payload field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `text` | string | Yes | Caption content. Text formatting is owned by the mobile client. |
+| `durationMs` | integer | No | How long to display the caption. When omitted, it remains until replaced or cleared. |
