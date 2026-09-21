@@ -10,7 +10,7 @@ This page defines the proposed JSON messages Max patches send to the relay serve
 
 The baseline schema below is the initial implementation target. It assumes every connected device receives every event.
 
-:::info Stretch goals: zones and keyframes
+:::info[Stretch goals: zones and keyframes]
 
 Zone targeting and keyframed effects are documented as planned extensions, but **are not supported yet**. Max patches must not send `target` or `keyframes` fields until those features are implemented by the server and mobile client.
 
@@ -231,7 +231,7 @@ Plays a preloaded video asset full-screen.
 
 ## Planned extension: zone targets
 
-:::warning Not supported yet
+:::warning[Not supported yet]
 
 All baseline events apply to the full session. The server must reject or ignore `target` until zone routing is implemented.
 
@@ -252,7 +252,7 @@ The planned `target` field will let a Max patch send the same event type to a su
 
 ## Planned extension: keyframes
 
-:::warning Not supported yet
+:::warning[Not supported yet]
 
 The initial client supports one value for the full duration of a `haptic` or `screen` event. It does not yet execute keyframe timelines.
 
