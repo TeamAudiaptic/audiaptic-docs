@@ -87,6 +87,12 @@ const config: Config = {
           position: 'left',
           label: 'Tutorial',
         },
+        {
+          type: 'docSidebar',
+          sidebarId: 'devDocsSidebar',
+          position: 'left',
+          label: 'Dev Docs',
+        },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/TeamAudiaptic/audiaptic-docs',

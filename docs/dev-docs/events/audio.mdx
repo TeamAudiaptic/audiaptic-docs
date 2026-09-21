@@ -1,0 +1,28 @@
+---
+sidebar_position: 8
+---
+
+# Audio Event
+
+An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs` allow a Max patch to trigger a clip or a segment of a longer file.
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "drone-clip-01",
+  "sequence": 47,
+  "type": "audio",
+  "timestamp": 1730000005000,
+  "payload": {
+    "assetAlias": "low-drone",
+    "startOffsetMs": 12000,
+    "durationMs": 5000
+  }
+}
+```
+
+| Payload field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `assetAlias` | string | Yes | Alias of a session-preloaded audio asset. |
+| `startOffsetMs` | integer | No | Offset from the start of the asset. Defaults to `0`. |
+| `durationMs` | integer | No | Clip length. When omitted, playback continues to the end of the asset. |

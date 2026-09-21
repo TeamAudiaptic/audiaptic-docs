@@ -1,0 +1,8 @@
+{
+  "label": "Events",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "These pages define the event schemas that Max will send to the server to then be distributed to the pool of connected devices."
+  }
+}
