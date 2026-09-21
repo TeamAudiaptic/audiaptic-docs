@@ -61,7 +61,7 @@ AUTHOR_MAP = {
     "ejs8021": "Elijah",
     "fangkristen": "Kristen",
     "TashiTseten": "Tashi",
-    "josh-mitch": "Josh",
+    "Josh-mitch": "Josh",
 }
 
 # Tags applied to every generated post. Add them to blog/tags.yml to avoid
