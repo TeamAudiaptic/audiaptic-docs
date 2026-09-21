@@ -1,0 +1,7 @@
+---
+sidebar_position: 12
+---
+
+# Validation Expectations
+
+The server should reject an event when its version or type is unknown, a required field is missing, a value falls outside its documented range, an asset alias is not registered for the session, or a timestamp or duration is invalid. It should return a structured error to the Max connection and never forward an invalid event to audience devices.

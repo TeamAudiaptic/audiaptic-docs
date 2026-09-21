@@ -1,0 +1,26 @@
+---
+sidebar_position: 4
+---
+
+# Torch Event
+
+A `torch` event turns the device flashlight (rear-camera torch) on for a fixed interval. It does not capture camera video or images.
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "torch-hit-01",
+  "sequence": 43,
+  "type": "torch",
+  "timestamp": null,
+  "payload": {
+    "durationMs": 250
+  }
+}
+```
+
+| Payload field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `durationMs` | integer | Yes | How long the torch remains on. |
+
+The client must handle absent hardware or a denied camera permission gracefully.

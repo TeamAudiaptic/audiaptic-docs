@@ -1,0 +1,32 @@
+---
+sidebar_position: 11
+---
+
+# Planned Extension: Keyframes
+
+:::warning[Not supported yet]
+
+The initial client supports one value for the full duration of a `haptic` or `screen` event. It does not yet execute keyframe timelines.
+
+:::
+
+Keyframes will describe evolving effects such as a haptic ramp followed by pulses, or a color fade. A future event may add a `keyframes` array to its payload. Each frame is relative to the event timestamp.
+
+```json
+{
+  "type": "haptic",
+  "timestamp": 1730000010000,
+  "payload": {
+    "durationMs": 3000,
+    "keyframes": [
+      { "atMs": 0, "intensity": 0.0, "sharpness": 0.2 },
+      { "atMs": 700, "intensity": 0.8, "sharpness": 0.4 },
+      { "atMs": 1000, "intensity": 0.0 },
+      { "atMs": 1200, "intensity": 1.0, "sharpness": 0.8 },
+      { "atMs": 3000, "intensity": 0.0 }
+    ]
+  }
+}
+```
+
+When implemented, `atMs` will be a non-negative offset inside `durationMs`. The client will linearly interpolate values between adjacent frames. Keyframes for a `screen` event will use `color` and `brightness`; keyframes for a `haptic` event will use `intensity` and optional `sharpness`.
