@@ -3,16 +3,19 @@
 
 All four repos are public, so this reads them over plain HTTPS with no
 credentials. It only ever writes inside the repo it runs in, and only ever
-writes files matching BLOG_DIR/<date>-<SLUG_SUFFIX>.mdx - your hand-written
-blog posts are never touched.
+touches files matching BLOG_DIR/<date>-<SLUG_SUFFIX>.mdx - your hand-written
+blog posts are never read, rewritten or deleted.
+
+Days are grouped in the team's local timezone (LOCAL_TZ), not UTC, so an
+evening merge lands on the day it felt like rather than the next one.
 
 Each generated post looks like:
 
     ---
     slug: changelog-2026-09-15
     title: 'Changelog: September 15, 2026'
-    authors: [TeamAudiaptic]
-    tags: [changelog]
+    authors: [Liam, Josh]
+    tags: [changelog, changes-server]
     date: 2026-09-15
     ---
 
@@ -21,10 +24,9 @@ Each generated post looks like:
     {/* truncate */}
 
     ## Server
-    ### <name> @lhw2837
+    ### Liam (@shackhorn)
     <emoji> **Feature** Per-layer solo and mute [#12](link)
 
-Set ORG and BRANCH below. Nothing else needs configuring.
 """
 
 import os
@@ -33,7 +35,8 @@ import sys
 import urllib.error
 import urllib.request
 from collections import defaultdict, OrderedDict
-from datetime import date
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -41,19 +44,23 @@ import yaml
 # Configuration
 # ---------------------------------------------------------------------------
 
-ORG = "TeamAudiaptic"                  # GitHub org or user that owns the repos
-BRANCH = "changelog"                    # default branch; use "master" if that's yours
+ORG = "TeamAudiaptic"              # GitHub org or user that owns the repos
+BRANCH = "changelog"               # branch holding CHANGELOG.yml in each repo
 
 BLOG_DIR = "blog"                  # Docusaurus blog directory
 SLUG_SUFFIX = "changelog"          # files are <date>-<SLUG_SUFFIX>.mdx
 
-# Author key from blog/authors.yml used on every generated post.
+# Timezone used to decide which day a change belongs to. Stored timestamps stay
+# in UTC; this only affects grouping and display, and handles DST on its own.
+LOCAL_TZ = ZoneInfo("America/New_York")
+
+# Author key from blog/authors.yml used when a day has no mapped contributors.
 POST_AUTHOR = "TeamAudiaptic"
 
-# Optional: GitHub login -> key in blog/authors.yml. Any contributor listed
-# here is credited as an author on the days they shipped something. Logins not
-# in this map are simply omitted, so an incomplete map can't break the build.
-# If a day has no mapped contributors, POST_AUTHOR is used alone.
+# GitHub login -> key in blog/authors.yml. Contributors listed here are credited
+# as authors on the days they shipped something, and their name is shown in the
+# section heading. Logins not in this map fall back to the raw login, so an
+# incomplete map can never break the build.
 AUTHOR_MAP = {
     "shackhorn": "Liam",
     "dcr8024": "Darren",
@@ -64,7 +71,7 @@ AUTHOR_MAP = {
     "Josh-mitch": "Josh",
 }
 
-# Tags applied to every generated post. Add them to blog/tags.yml to avoid
+# Tags applied to every generated post. Add these to blog/tags.yml to avoid
 # Docusaurus' "inline tag" warning.
 TAGS = ["changelog"]
 
@@ -80,7 +87,8 @@ REPOS = OrderedDict([
     ("audiaptic-docs", "Docs"),
 ])
 
-# Repo -> Post Tags. Maps a repo to one or more tags that will be applied to every post containing changes from that repo. Used to categorize the changelog entries.
+# Repo label -> extra tags applied to any post containing changes from that
+# repo. These also need to exist in blog/tags.yml.
 REPO_TAGS = {
     "Server": ["changes-server"],
     "Client": ["changes-client"],
@@ -91,10 +99,10 @@ REPO_TAGS = {
 # Fallback display for entries written before emoji/label were stored.
 TYPE_LABEL = {
     "breaking": ("\U0001F4A5", "Breaking change"),
-    "feature": ("\u2728", "Feature"),
+    "feature": ("✨", "Feature"),
     "fix": ("\U0001F41B", "Fix"),
-    "perf": ("\u26A1", "Performance"),
-    "refactor": ("\u267B\uFE0F", "Refactor"),
+    "perf": ("⚡", "Performance"),
+    "refactor": ("♻️", "Refactor"),
     "docs": ("\U0001F4DD", "Documentation"),
     "maintenance": ("\U0001F527", "Maintenance"),
 }
@@ -108,10 +116,22 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July",
 RAW_URL = "https://raw.githubusercontent.com/{org}/{repo}/{branch}/CHANGELOG.yml"
 
 CODE_SPAN = re.compile(r"(`+)(?:.|\n)*?\1")
-ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 # ---------------------------------------------------------------------------
+
+
+def local_day(timestamp):
+    """A stored UTC timestamp -> YYYY-MM-DD in LOCAL_TZ, or "" if unparseable."""
+    try:
+        parsed = datetime.fromisoformat(timestamp)
+    except (TypeError, ValueError):
+        return ""
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+
+    return parsed.astimezone(LOCAL_TZ).strftime("%Y-%m-%d")
 
 
 def escape_mdx(text):
@@ -175,7 +195,7 @@ def fetch(repo):
 
 
 def collect():
-    """Return {day: {repo_label: {author: [record, ...]}}}."""
+    """Return {day: {repo_label: {author: [record, ...]}}}, keyed by local day."""
     tree = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
     for repo, label in REPOS.items():
@@ -185,9 +205,9 @@ def collect():
 
         for entry in entries:
             time = str(entry.get("time", ""))
-            day = time[:10]
+            day = local_day(time)
 
-            if not ISO_DAY.match(day):
+            if not day:
                 print("  ! entry %s in %s has no usable date, skipping"
                       % (entry.get("id"), repo), file=sys.stderr)
                 continue
@@ -223,18 +243,16 @@ def post_authors(day_tree):
     mapped = sorted({AUTHOR_MAP[login] for login in logins if login in AUTHOR_MAP})
     return mapped or [POST_AUTHOR]
 
-def collect_post_tags(day_tree):
-    """Collect unique tags for a day's frontmatter based on the repos in day_tree."""
-    tags = set(TAGS)  # Start with the default tags
 
-    print(f"Processing day tree: {day_tree.keys()}")
-    for repo in day_tree.keys():
-        print(f"Processing repo: {repo}")
-        if repo in REPO_TAGS:
-            print(f"Adding tags for repo {repo}: {REPO_TAGS[repo]}")
-            tags.update(REPO_TAGS[repo])
+def post_tags(day_tree):
+    """Tags for a day's frontmatter: the defaults plus one set per repo touched."""
+    tags = set(TAGS)
+
+    for label in day_tree:
+        tags.update(REPO_TAGS.get(label, []))
 
     return sorted(tags)
+
 
 def render_post(day, day_tree):
     repo_h = "#" * HEADING_BASE
@@ -256,7 +274,7 @@ def render_post(day, day_tree):
         "slug: %s-%s" % (SLUG_SUFFIX, day),
         "title: 'Changelog: %s'" % pretty_date(day),
         "authors: [%s]" % ", ".join(post_authors(day_tree)),
-        "tags: [%s]" % ", ".join(collect_post_tags(day_tree)),
+        "tags: [%s]" % ", ".join(post_tags(day_tree)),
         "date: %s" % day,
         "---",
         "",
@@ -275,9 +293,12 @@ def render_post(day, day_tree):
             continue
 
         lines += ["%s %s" % (repo_h, label), ""]
-        # <name> (@username) is the format for author headings. If AUTHOR_MAP has a mapping, use that; otherwise, just use the username.
+
         for author in sorted(day_tree[label], key=str.lower):
-            lines += ["%s %s (@%s)" % (author_h, AUTHOR_MAP.get(author, author), author), ""]
+            # "Liam (@shackhorn)", or just "@login" when the login is unmapped.
+            name = AUTHOR_MAP.get(author)
+            heading = "%s (@%s)" % (name, author) if name else "@%s" % author
+            lines += ["%s %s" % (author_h, heading), ""]
 
             for record in sorted(day_tree[label][author],
                                  key=lambda r: (type_rank(r), r["time"])):
@@ -297,6 +318,34 @@ def render_post(day, day_tree):
                 ]
 
     return "\n".join(lines).rstrip("\n") + "\n"
+
+
+def prune(tree):
+    """Delete generated posts for days that no longer have any entries.
+
+    Only files named <date>-<SLUG_SUFFIX>.mdx are considered, so hand-written
+    posts and dated post folders are never touched. This is what keeps a
+    corrected timestamp from stranding a stale file behind.
+    """
+    if not os.path.isdir(BLOG_DIR):
+        return 0
+
+    expected = {"%s-%s.mdx" % (day, SLUG_SUFFIX) for day in tree}
+    suffix = "-%s.mdx" % SLUG_SUFFIX
+    removed = 0
+
+    for name in sorted(os.listdir(BLOG_DIR)):
+        path = os.path.join(BLOG_DIR, name)
+
+        if not os.path.isfile(path) or not name.endswith(suffix):
+            continue
+
+        if name not in expected:
+            os.remove(path)
+            print("  removed stale %s" % path)
+            removed += 1
+
+    return removed
 
 
 def main():
@@ -330,8 +379,10 @@ def main():
         print("  wrote %s" % path)
         written += 1
 
-    print("%d day(s) in the changelog, %d post(s) written or updated."
-          % (len(tree), written))
+    removed = prune(tree)
+
+    print("%d day(s) in the changelog, %d post(s) written or updated, "
+          "%d removed." % (len(tree), written, removed))
     return 0
 
 
