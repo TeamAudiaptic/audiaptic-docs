@@ -47,3 +47,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Dev Docs section created and Event Schemas doc created
+- id: 5
+  pr: 37
+  author: shackhorn
+  time: '2026-09-22T00:38:44+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/37
+  changes:
+  - type: maintenance
+    emoji: 🔧
+    label: Maintenance
+    message: Make documentation available on https://teamaudiaptic.github.io.
