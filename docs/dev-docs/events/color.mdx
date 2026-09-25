@@ -1,0 +1,29 @@
+---
+sidebar_position: 5
+---
+
+# Color Event
+
+A `color` event shows a full-screen solid color.
+
+```json
+{
+  "schemaVersion": "1.0",
+  "eventId": "blue-color-1",
+  "sequence": 44,
+  "type": "color",
+  "sentTimestamp": 1730000001200,
+  "execTimestamp": 1730000001700,
+  "payload": {
+    "color": "#0057FF",
+    "durationMs": 1500,
+    "transitionMs": 0
+  }
+}
+```
+
+| Payload field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `color` | string | Yes | Color to display, as an sRGB hex string in the form "#RRGGBB". |
+| `durationMs` | integer | Yes | How long the screen effect remains visible. |
+| `transitionMs` | integer | No | Time to transition from the current color to this event's color. |
