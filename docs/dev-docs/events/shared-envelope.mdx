@@ -23,10 +23,11 @@ Every event has the following top-level shape:
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "intro-haptic-001",
-  "sequence": 42,
+  "eventId": "demo-event-1",
   "type": "haptic",
-  "timestamp": 1730000000000,
+  "sequence": 42,
+  "sentTimestamp": 1730000000000,
+  "execTimestamp": 1730000000500,
   "payload": {}
 }
 ```
@@ -38,22 +39,25 @@ Every event has the following top-level shape:
 | `sequence` | integer | Yes | A monotonically increasing sequence number assigned by Max. It gives clients a deterministic order when two events affect the same output at the same time. |
 | `type` | string | Yes | One of the [supported event types](./event-types). |
 | `timestamp` | integer or `null` | Yes | Unix epoch time in milliseconds at which the client should execute the event. Use `null` for “as soon as received.” |
+| `sentTimestamp` | integer | Yes | Unix epoch time in milliseconds at which the event was sent by Max. |
+| `execTimestamp` | integer | Yes | Unix epoch time in milliseconds at which the client should execute the event. |
 | `payload` | object | Yes | Properties specific to `type`. |
 
 The event envelope does not include a session ID: the server determines the session from the authenticated Max connection and distributes the event only within that session.
 
 ## Timing and ordering
 
-- Timestamped events should be sent sufficiently before their `timestamp` for the server to relay and clients to queue them. A `null` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
-- Clients execute each event independently. Multiple events with the same timestamp may therefore begin together—for example, a `haptic`, `screen`, and `caption` event.
+- Timestamped events should be sent sufficiently before their `execTimestamp` for the server to relay and clients to queue them. A `null` or `0` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
+- Clients execute each event independently. Multiple events with the same timestamp may therefore begin together (ex: a `haptic`, `screen`, and `caption` event).
 - When two events control the same output at the same timestamp, the higher `sequence` value takes precedence. A newer haptic replaces a haptic already playing; a newer screen event replaces the current screen effect.
-- Durations are expressed in milliseconds. A duration ends the event and restores the output to its state immediately before that event, unless a later event has already replaced it.
+- Durations (included in the payload) are expressed in milliseconds. A duration ends the event and restores the output to its state immediately before that event, unless a later event has already replaced it.
 
-## Common value rules
+## Common payload value rules
 
 | Value | Rule |
 | --- | --- |
-| Time and duration | Non-negative integer milliseconds. |
+| `durationMs` | Non-negative integer milliseconds. `0` indicates until replaced or the asset is complete |
 | `intensity` and `brightness` | Number from `0` through `1`, inclusive. These are normalized intent values; the mobile app maps them to device capabilities. |
 | `color` | Six-digit sRGB hexadecimal string in the form `"#RRGGBB"`. |
-| Asset alias | A non-empty string registered for the session and downloaded by the device during session join. |
+| `assetAlias` | A unique non-empty string of the name of the file registered for the session and downloaded by the device during session join. |
+| `transitionMs` | Non-negative integer milliseconds to fade between the current state and the new event state. `null` or `0` indicates immediate change.  |
