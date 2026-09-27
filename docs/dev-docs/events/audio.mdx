@@ -9,14 +9,16 @@ An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs`
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "drone-clip-01",
+  "eventId": "drone-audio-1",
   "sequence": 47,
   "type": "audio",
-  "timestamp": 1730000005000,
+  "sentTimestamp": 1730000005000,
+  "execTimestamp": 1730000005500,
   "payload": {
-    "assetAlias": "low-drone",
+    "assetAlias": "low-drone.mp3",
     "startOffsetMs": 12000,
-    "durationMs": 5000
+    "durationMs": 5000,
+    "transitionMs": 0
   }
 }
 ```
@@ -26,3 +28,4 @@ An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs`
 | `assetAlias` | string | Yes | Alias of a session-preloaded audio asset. |
 | `startOffsetMs` | integer | No | Offset from the start of the asset. Defaults to `0`. |
 | `durationMs` | integer | No | Clip length. When omitted, playback continues to the end of the asset. |
+| `transitionMs` | integer | No | Time to fade in the audio. |
