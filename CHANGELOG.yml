@@ -67,3 +67,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Updated initial event schemas based on feedback.
+- id: 7
+  pr: 44
+  author: Josh-mitch
+  time: '2026-09-29T22:03:38+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/44
+  changes:
+  - type: maintenance
+    emoji: 🔧
+    label: Maintenance
+    message: Remove Keyframes section. Replaced with transition field per event.
