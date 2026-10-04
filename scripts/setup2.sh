@@ -33,7 +33,7 @@ REPOS=(
 
 for repo in "${REPOS[@]}"; do
     if [[ ! -d "davhi/$repo" ]]; then
-        git clone "https://github.com/TeamAudiaptic/$repo.git" "davhi/$repo" &> $QUIET \
+        git clone "git@github.com:TeamAudiaptic/$repo.git" "davhi/$repo" &> $QUIET \
             && echo "Cloned $repo into ./davhi/$repo_name" \
             || echo "Error cloning $repo" >&2
     else
