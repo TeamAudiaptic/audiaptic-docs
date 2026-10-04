@@ -9,6 +9,10 @@ fi
 
 QUIET="/dev/null"
 
+# apt update
+echo "Updating and upgrading apt"
+sudo apt update &> $QUIET && apt upgrade -y &> $QUIET
+
 # Python
 echo "Installing python..."
 sudo apt install python3 python3-pip pythonpy -y  &> $QUIET
@@ -42,4 +46,4 @@ echo -e "Connect Docker Desktop at:\
     \n\tToggle this WSL distro ON\n\tApply & restart"
 
 echo
-echo "run setup2.sh as user"
+echo "run 'code .' and wait for WSL to connect to VSCode, then run setup2.sh as user"

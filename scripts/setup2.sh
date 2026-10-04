@@ -7,6 +7,22 @@ if (( $EUID == 0 )); then
     exit 1
 fi
 
+QUIET="/dev/null"
+
+# create ssh key
+echo "Creating ssh key..."
+KEY_PATH="$HOME/.ssh/id_ed25519"
+if [[ ! -f "$KEY_PATH" ]]; then
+    ssh-keygen -t ed25519 -N "" -f "$KEY_PATH"
+else
+    echo "SSH key already exists at $KEY_PATH"
+fi
+echo
+echo "Public key:"
+cat "$KEY_PATH.pub"
+echo
+read -r -s -p "Add ssh key to github then press enter:"
+
 # git setup
 echo "Git config..."
 read -p "Git username: " username
@@ -73,16 +89,3 @@ code --install-extension dsznajder.es7-react-js-snippets
 # docker
 code --install-extension ms-azuretools.vscode-containers
 code --install-extension ms-azuretools.vscode-docker
-
-
-# create ssh key
-echo "Creating ssh key..."
-KEY_PATH="$HOME/.ssh/id_ed25519"
-if [[ ! -f "$KEY_PATH" ]]; then
-    ssh-keygen -t ed25519 -N "" -f "$KEY_PATH"
-else
-    echo "SSH key already exists at $KEY_PATH"
-fi
-echo
-echo "Public key (add to github):"
-cat "$KEY_PATH.pub"
