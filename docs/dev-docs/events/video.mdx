@@ -9,14 +9,17 @@ A `video` event plays a preloaded video asset full-screen.
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "video-clip-01",
+  "eventId": "demo-video-1",
   "sequence": 48,
   "type": "video",
-  "timestamp": 1730000007000,
+  "sentTimestamp": 1730000007000,
+  "execTimestamp": 1730000007500,
   "payload": {
-    "assetAlias": "opening-loop",
+    "assetAlias": "opening-loop.mp4",
     "startOffsetMs": 0,
-    "durationMs": 10000
+    "durationMs": 10000,
+    "loop": true,
+    "transitionMs": 0
   }
 }
 ```
@@ -26,3 +29,5 @@ A `video` event plays a preloaded video asset full-screen.
 | `assetAlias` | string | Yes | Alias of a session-preloaded video asset. |
 | `startOffsetMs` | integer | No | Offset from the start of the video. Defaults to `0`. |
 | `durationMs` | integer | No | Clip length. When omitted, playback continues to the end of the video. |
+| `loop` | boolean | No | If video playback should be looped back to the start upon completion until the duration is complete. If duration is missing, loops once. |
+| `transitionMs` | integer | No | Time to fade in the video. |
