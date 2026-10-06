@@ -77,3 +77,29 @@ entries:
     emoji: 🔧
     label: Maintenance
     message: Remove Keyframes section. Replaced with transition field per event.
+- id: 8
+  pr: 48
+  author: shackhorn
+  time: '2026-10-06T22:07:51+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/48
+  changes:
+  - type: feature
+    emoji: ✨
+    label: Feature
+    message: API reference pages are now generated automatically from the server's OpenAPI spec and published under **API Docs**.
+  - type: feature
+    emoji: ✨
+    label: Feature
+    message: 'New **WebSocket API** page documenting the performer socket: every event the performer can send, and every ack the server replies with.'
+  - type: fix
+    emoji: 🐛
+    label: Fix
+    message: '"Edit this page" links pointed at the Docusaurus template instead of this repo.'
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Removed the default Docusaurus tutorial from the navigation and renamed **Blog** to **Changelog**.
+  - type: maintenance
+    emoji: 🔧
+    label: Maintenance
+    message: Added the OpenAPI docs plugin and theme and the AsyncAPI React component, plus an API docs generation step in the deploy workflow.
