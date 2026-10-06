@@ -2,15 +2,44 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Distributed Audio-Visual-Haptic Interface Server API",
+    "description": "REST routes for the server. Performer events are sent over WebSocket at `/api/performer` and are documented separately on the **WebSocket API** page.",
     "version": "1.0.0"
   },
   "components": {
     "schemas": {}
   },
-  "paths": {},
+  "paths": {
+    "/api/": {
+      "get": {
+        "operationId": "helloWorld",
+        "summary": "Hello world",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "servers": [
     {
-      "url": "http://localhost:3000"
+      "url": "http://localhost"
     }
   ]
 }

@@ -1,0 +1,84 @@
+/*
+ * Dark theme for the AsyncAPI component.
+ * It only ships light styles: Tailwind-style utility classes scoped to
+ * .aui-root. In dark mode, remap those utilities to Infima's dark palette so
+ * the panels match the rest of the site and text inherits a readable colour.
+ */
+
+/* Tailwind typography wraps inline code in literal backticks; drop them (both themes). */
+.aui-root .prose code::before,
+.aui-root .prose code::after {
+  content: none;
+}
+
+[data-theme='dark'] .aui-root {
+  --aui-bg: var(--ifm-background-color);
+  --aui-surface: var(--ifm-background-surface-color);
+  --aui-raised: #2b2c2f;
+  --aui-border: var(--ifm-color-emphasis-300);
+  --aui-text: var(--ifm-font-color-base);
+  --aui-text-muted: var(--ifm-color-emphasis-700);
+  --aui-text-faint: var(--ifm-color-emphasis-600);
+
+  color: var(--aui-text);
+}
+
+/* Backgrounds */
+[data-theme='dark'] .aui-root .bg-white {
+  background-color: var(--aui-bg);
+}
+[data-theme='dark'] .aui-root .bg-gray-100 {
+  background-color: var(--aui-surface);
+}
+[data-theme='dark'] .aui-root .bg-gray-200 {
+  background-color: var(--aui-raised);
+}
+[data-theme='dark'] .aui-root .bg-gray-400 {
+  background-color: var(--aui-border);
+}
+/* The examples column: keep it darker than the content, like a code panel. */
+[data-theme='dark'] .aui-root .bg-gray-800 {
+  background-color: #141416;
+}
+[data-theme='dark'] .aui-root .bg-blue-100 {
+  background-color: rgba(66, 153, 225, 0.15);
+}
+[data-theme='dark'] .aui-root .bg-red-200 {
+  background-color: rgba(229, 62, 62, 0.2);
+}
+
+/* Borders */
+[data-theme='dark'] .aui-root .border-gray-400 {
+  border-color: var(--aui-border);
+}
+
+/* Text */
+[data-theme='dark'] .aui-root .text-gray-900,
+[data-theme='dark'] .aui-root .text-gray-800 {
+  color: var(--aui-text);
+}
+[data-theme='dark'] .aui-root .text-gray-700,
+[data-theme='dark'] .aui-root .text-gray-600 {
+  color: var(--aui-text-muted);
+}
+[data-theme='dark'] .aui-root .text-gray-500 {
+  color: var(--aui-text-faint);
+}
+[data-theme='dark'] .aui-root .hover\:text-gray-700:hover,
+[data-theme='dark'] .aui-root .hover\:text-gray-900:hover {
+  color: #fff;
+}
+
+/* Markdown descriptions (Tailwind typography) */
+[data-theme='dark'] .aui-root .prose,
+[data-theme='dark'] .aui-root .prose strong,
+[data-theme='dark'] .aui-root .prose code,
+[data-theme='dark'] .aui-root .prose h1,
+[data-theme='dark'] .aui-root .prose h2,
+[data-theme='dark'] .aui-root .prose h3,
+[data-theme='dark'] .aui-root .prose h4 {
+  color: var(--aui-text);
+}
+[data-theme='dark'] .aui-root .prose a {
+  color: var(--ifm-color-primary);
+}
