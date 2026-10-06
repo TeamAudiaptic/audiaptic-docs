@@ -1,0 +1,16 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Distributed Audio-Visual-Haptic Interface Server API",
+    "version": "1.0.0"
+  },
+  "components": {
+    "schemas": {}
+  },
+  "paths": {},
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ]
+}
