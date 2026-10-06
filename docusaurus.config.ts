@@ -42,13 +42,13 @@ const config: Config = {
         id: 'fastifyApi',
         docsPluginId: 'classic',
         config: {
-          server: {
+        server: {
             specPath: 'openapi/openapi.json',
             outputDir: 'docs/api',
             sidebarOptions: {
-              groupPathsBy: 'tag',
+                groupPathsBy: 'tag',
             },
-          } satisfies OpenApiPlugin.Options,
+        } satisfies OpenApiPlugin.Options,
         },
       },
     ],
@@ -107,6 +107,7 @@ const config: Config = {
           position: 'left',
           label: 'API Docs',
         },
+        { to: '/websocket-api', label: 'WebSocket API', position: 'left' },
         {
           type: 'docSidebar',
           sidebarId: 'devDocsSidebar',

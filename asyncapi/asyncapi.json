@@ -1,0 +1,777 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "Audiaptic WebSocket API",
+    "version": "1.0.0",
+    "description": "Real-time connections to the server. All sockets live under `/api`, behind the Caddy proxy.",
+    "tags": [
+      {
+        "name": "performer",
+        "description": "The performer driving the show. Will require authentication."
+      }
+    ]
+  },
+  "servers": {
+    "api": {
+      "host": "localhost",
+      "pathname": "/api",
+      "protocol": "ws",
+      "description": "The API app, behind the Caddy proxy."
+    }
+  },
+  "channels": {
+    "performer": {
+      "address": "/performer",
+      "title": "Performer",
+      "description": "The performer sends show events; every event frame is answered with one ack.",
+      "messages": {
+        "audioEvent": {
+          "$ref": "#/components/messages/audioEvent"
+        },
+        "captionEvent": {
+          "$ref": "#/components/messages/captionEvent"
+        },
+        "colorEvent": {
+          "$ref": "#/components/messages/colorEvent"
+        },
+        "hapticEvent": {
+          "$ref": "#/components/messages/hapticEvent"
+        },
+        "imageEvent": {
+          "$ref": "#/components/messages/imageEvent"
+        },
+        "pingEvent": {
+          "$ref": "#/components/messages/pingEvent"
+        },
+        "torchEvent": {
+          "$ref": "#/components/messages/torchEvent"
+        },
+        "ack200": {
+          "$ref": "#/components/messages/ack200"
+        },
+        "ack202": {
+          "$ref": "#/components/messages/ack202"
+        },
+        "ack400": {
+          "$ref": "#/components/messages/ack400"
+        },
+        "ack422": {
+          "$ref": "#/components/messages/ack422"
+        },
+        "ack500": {
+          "$ref": "#/components/messages/ack500"
+        }
+      }
+    }
+  },
+  "operations": {
+    "performerSendsEvent": {
+      "action": "receive",
+      "title": "Send an event",
+      "summary": "Performer → server: a show event.",
+      "channel": {
+        "$ref": "#/channels/performer"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/performer/messages/audioEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/captionEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/colorEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/hapticEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/imageEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/pingEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/torchEvent"
+        }
+      ],
+      "tags": [
+        {
+          "name": "performer"
+        }
+      ]
+    },
+    "performerReceivesAck": {
+      "action": "send",
+      "title": "Receive an ack",
+      "summary": "Server → performer: exactly one ack per event frame.",
+      "channel": {
+        "$ref": "#/channels/performer"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/performer/messages/ack200"
+        },
+        {
+          "$ref": "#/channels/performer/messages/ack202"
+        },
+        {
+          "$ref": "#/channels/performer/messages/ack400"
+        },
+        {
+          "$ref": "#/channels/performer/messages/ack422"
+        },
+        {
+          "$ref": "#/channels/performer/messages/ack500"
+        }
+      ],
+      "tags": [
+        {
+          "name": "performer"
+        }
+      ]
+    }
+  },
+  "components": {
+    "messages": {
+      "audioEvent": {
+        "name": "audio",
+        "title": "audio event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "audio"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "assetAlias": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "startOffsetMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "assetAlias"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "captionEvent": {
+        "name": "caption",
+        "title": "caption event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "caption"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "colorEvent": {
+        "name": "color",
+        "title": "color event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "color"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "color": {
+                  "type": "string",
+                  "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "color",
+                "durationMs",
+                "transitionMs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "hapticEvent": {
+        "name": "haptic",
+        "title": "haptic event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "haptic"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "intensity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "sharpness": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "intensity",
+                "sharpness",
+                "durationMs",
+                "transitionMs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "imageEvent": {
+        "name": "image",
+        "title": "image event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "image"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "assetAlias": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "assetAlias"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "pingEvent": {
+        "name": "ping",
+        "title": "ping event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "ping"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "torchEvent": {
+        "name": "torch",
+        "title": "torch event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "torch"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "durationMs",
+                "transitionMs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "ack200": {
+        "name": "ack 200",
+        "title": "Ack 200",
+        "summary": "Understood.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ack"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "number",
+              "const": 200
+            }
+          },
+          "required": [
+            "type",
+            "eventId",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "ack202": {
+        "name": "ack 202",
+        "title": "Ack 202",
+        "summary": "Accepted and fanned out to devices.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ack"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "number",
+              "const": 202
+            }
+          },
+          "required": [
+            "type",
+            "eventId",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "ack400": {
+        "name": "ack 400",
+        "title": "Ack 400",
+        "summary": "The frame was not parseable as JSON.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ack"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "number",
+              "const": 400
+            },
+            "error": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "eventId",
+            "status",
+            "error"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "ack422": {
+        "name": "ack 422",
+        "title": "Ack 422",
+        "summary": "Well-formed, but invalid for the schema or the session.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ack"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "number",
+              "const": 422
+            },
+            "error": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "eventId",
+            "status",
+            "error"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "ack500": {
+        "name": "ack 500",
+        "title": "Ack 500",
+        "summary": "Accepted, but the server failed to distribute it.",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ack"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "number",
+              "const": 500
+            },
+            "error": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "eventId",
+            "status",
+            "error"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}
