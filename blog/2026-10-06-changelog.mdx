@@ -1,0 +1,49 @@
+---
+slug: changelog-2026-10-06
+title: 'Changelog: October 6, 2026'
+authors: [Liam]
+tags: [changelog, changes-client, changes-docs, changes-server]
+date: 2026-10-06
+---
+
+**13 changes** across **3 repos** from **1 contributor**.
+
+{/* truncate */}
+
+## Server
+
+### Liam (@shackhorn)
+
+✨ **Feature** The server now "understands" the difference between ``audio``, ``caption``, ``color``, ``haptic``, ``image``, ``ping``, and ``torch`` event types. Right now, only ``ping`` is truly "supported". [#25](https://github.com/TeamAudiaptic/audiaptic-server/pull/25)
+
+✨ **Feature** The performer WebSocket is now documented with an AsyncAPI spec generated from the event schemas, synced to the docs site automatically. [#33](https://github.com/TeamAudiaptic/audiaptic-server/pull/33)
+
+✨ **Feature** One-command local dev environment (`run_me.bat` / `teardown.bat`) that runs the portal and API behind Caddy, matching production URLs. Use `run_me.bat`. Only use `teardown.bat` if it gets stuck. [#33](https://github.com/TeamAudiaptic/audiaptic-server/pull/33)
+
+🐛 **Fix** The generated OpenAPI spec was empty because routes were registered before Swagger loaded. [#33](https://github.com/TeamAudiaptic/audiaptic-server/pull/33)
+
+🐛 **Fix** `npm run export:schema` failed on Windows. [#33](https://github.com/TeamAudiaptic/audiaptic-server/pull/33)
+
+🔧 **Maintenance** Modified workflow file to generate an openapi spec json. [#25](https://github.com/TeamAudiaptic/audiaptic-server/pull/25)
+
+🔧 **Maintenance** The docs sync workflow now also pushes `asyncapi.json`. Added `cross-env`. Build output (`dist/`) is now git-ignored. [#33](https://github.com/TeamAudiaptic/audiaptic-server/pull/33)
+
+## Client
+
+### Liam (@shackhorn)
+
+🔧 **Maintenance** Added license [#1](https://github.com/TeamAudiaptic/audiaptic-client/pull/1)
+
+## Docs
+
+### Liam (@shackhorn)
+
+✨ **Feature** API reference pages are now generated automatically from the server's OpenAPI spec and published under **API Docs**. [#48](https://github.com/TeamAudiaptic/audiaptic-docs/pull/48)
+
+✨ **Feature** New **WebSocket API** page documenting the performer socket: every event the performer can send, and every ack the server replies with. [#48](https://github.com/TeamAudiaptic/audiaptic-docs/pull/48)
+
+🐛 **Fix** "Edit this page" links pointed at the Docusaurus template instead of this repo. [#48](https://github.com/TeamAudiaptic/audiaptic-docs/pull/48)
+
+📝 **Documentation** Removed the default Docusaurus tutorial from the navigation and renamed **Blog** to **Changelog**. [#48](https://github.com/TeamAudiaptic/audiaptic-docs/pull/48)
+
+🔧 **Maintenance** Added the OpenAPI docs plugin and theme and the AsyncAPI React component, plus an API docs generation step in the deploy workflow. [#48](https://github.com/TeamAudiaptic/audiaptic-docs/pull/48)
