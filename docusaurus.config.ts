@@ -103,13 +103,6 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'apiSidebar',
-          position: 'left',
-          label: 'API Docs',
-        },
-        { to: '/websocket-api', label: 'WebSocket API', position: 'left' },
-        {
-          type: 'docSidebar',
           sidebarId: 'devDocsSidebar',
           position: 'left',
           label: 'Dev Docs',
