@@ -1,25 +1,27 @@
 # DAHVI agent context
 
-DAHVI (Distributed Audio Haptic Visual Interface) is a real-time, inclusive performance system. A Max-based performer sends timestamped events to a per-performance service, which distributes them to a connected audience using native React Native apps on iOS and Android. Audience devices execute events locally at their scheduled Unix-epoch time to coordinate audio, visual, haptic, caption, and flashlight effects.
-
-Before planning or implementing work in this repository, read these canonical documents:
+Start every task in `audiaptic-docs`. Before planning or implementing, read:
 
 1. [Project overview](docs/dev-docs/project/overview.mdx)
 2. [High-level architecture](docs/dev-docs/project/architecture.mdx)
 
-For work involving the Max-to-client protocol, read the implementation-synced [WebSocket API](docs/dev-docs/events/websocket-api.mdx). Its source specification is [`asyncapi/asyncapi.json`](asyncapi/asyncapi.json), which the server workflow updates from implemented schemas.
+Use those documents to identify the owning component. Do not inspect another repository merely to determine ownership, and do not read more than one implementation repository unless the task actually spans their boundary.
 
-## Decision hierarchy
+## Documentation scope
 
-- The high-level architecture is authoritative for current component boundaries and deployment direction.
-- The implementation-synced AsyncAPI specification is authoritative for the current event contract. The pages in `docs/dev-docs/events-legacy/` are historical reference only and can diverge from implementation.
-- The original project proposal is historical context. Its browser-only client has been intentionally superseded by the native mobile-app decision because iOS browsers could not provide the required haptic and lighting behavior.
+Unless the task is to change the documentation website itself, read only `audiaptic-docs/docs`. Within it, use `project/` for system direction and boundaries, and `events/` for event contracts.
 
-## Important current constraints
+For a Max-to-client protocol task, also read the implementation-synced [WebSocket API](docs/dev-docs/events/websocket-api.mdx). The architecture is authoritative for component boundaries and deployment direction; [`asyncapi/asyncapi.json`](asyncapi/asyncapi.json) is authoritative for the current event contract. The `events-legacy/` pages are historical reference only.
 
-- The live event flow is currently one way: Max -> performance container -> mobile devices.
-- A performance is isolated in a Docker container on the DAVHI server; its state is temporary unless stored separately.
-- Media is configured per performance and stored in Cloudflare R2, outside the real-time relay path.
-- Zones, audience-to-Max input, multi-performance administration, and a more complete portal UI are planned work, not baseline behavior.
+## Repository routing
 
-If a proposed change crosses a component boundary, changes event timing or payload semantics, or assumes a planned capability already exists, surface the decision and update the relevant canonical documentation with the implementation.
+After classifying the task, open only the relevant repository. If it is not available in the workspace, ask the user to clone it and add it. Before reading or changing that repository, read its `AGENTS.md`.
+
+| Task ownership | Repository |
+| --- | --- |
+| Max connection or event patches; performer-side event creation | `audiaptic-max` |
+| Performance containers; WebSocket/API relay; portal, media configuration, or server persistence | `audiaptic-server` |
+| React Native iOS/Android audience experience; receiving, scheduling, or executing device effects | `audiaptic-client` |
+| Documentation content or documentation website | `audiaptic-docs` |
+
+For a cross-component change, read the protocol documentation and the `AGENTS.md` in each affected repository, and no others. Surface and document any change to component boundaries, event timing, payload semantics, or assumptions about planned capabilities when implementing it.
