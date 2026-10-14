@@ -1,0 +1,8 @@
+{
+  "label": "Events (Legacy)",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Previously authored event documentation retained for historical reference. It is not synchronized with the server implementation."
+  }
+}

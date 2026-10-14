@@ -1,0 +1,78 @@
+---
+sidebar_position: 2
+---
+
+# High-Level Architecture
+
+DAHVI connects Max, a per-performance backend, and a native mobile audience client. The live path is deliberately short: Max creates an event, the active performance distributes it, and each client schedules the effect locally.
+
+```text
+                         configure media
+    Operator  -------------------------------->  Admin server / portal
+                                                        |
+                                                        | store media
+                                                        v
+                                                   Cloudflare R2
+
+    Max patches  -- timestamped events -->  Performance container  -->  React Native apps
+         ^                                        on DAVHI server          iOS / Android
+         |                                                |
+         +-- connection patch and event patches          +-- WebSocket connections
+```
+
+## Components
+
+### React Native audience app
+
+The audience client is a React Native app for Android and iOS. A QR code takes an attendee to the app or prompts them to download it. Once connected to a performance, the app receives events and performs them at the scheduled Unix-epoch time.
+
+The app maps the requested effect to the device's available native capabilities. This native-client choice is intentional: browser-based iOS clients could not provide the required haptic and flashlight functionality.
+
+### Max patches
+
+Max is the performer-facing event source. The `audiaptic-max` repository provides:
+
+- A **connection patch** that maintains the WebSocket connection and sends events to the server.
+- **Event patches** that expose controls and inlets for individual event types, serialize an event as JSON, and pass it to the connection patch.
+
+Max users add the connection patch and the event patches they need to their own Max project. The detailed JSON contract is maintained in the implementation-synced [WebSocket API](../events/websocket-api).
+
+### DAVHI server and performance containers
+
+The `audiaptic-server` is hosted on `davhi.se.rit.edu`. It exposes two main paths:
+
+- `/api` is the path Max uses to reach the WebSocket for a performance.
+- `/portal` is the configuration path for performances and their media.
+
+Each performance is packaged as a Docker container on the DAVHI server. The container manages the WebSocket connection to Max, the connections to the audience's mobile devices, and performance-specific persistence. The initial deployment creates one performance; creating and operating multiple performance containers is a planned expansion.
+
+For the initial release, the live event flow is one way: **Max -> performance container -> mobile devices**. The architecture leaves room for a future return path from mobile devices through the server to Max so audience input can influence a performance.
+
+### Admin service and media storage
+
+The admin service configures a performance. Its current configuration responsibility is uploading performance media: photos, video, and audio. A more complete, user-friendly portal UI and configuration such as audience zones are future work.
+
+Media assets are stored in Cloudflare R2, outside the real-time event relay, so the mobile app can download them smoothly for use during a performance.
+
+### Persistence and operational data
+
+Performance-specific data is temporary and may be removed when a performance is no longer in use. Information that must outlive a performance, such as logs used to analyze DAVHI latency, belongs in separate persistent storage on the DAVHI server.
+
+## Timing and synchronization
+
+1. Max produces an event with a Unix-epoch timestamp.
+2. The performance container relays the event to the active audience devices as soon as it receives it.
+3. Each client queues and executes the event at the indicated time.
+
+This separates network delivery from effect execution, which is the basis for synchronization across the audience. See the implementation-synced [WebSocket API](../events/websocket-api) for the exact current fields, ordering behavior, and validation expectations.
+
+## Planned extensions
+
+- Multiple concurrently configured performance containers.
+- Audience-to-Max event flow and interactive audience input.
+- Zone configuration for effects targeted to portions of the audience.
+- Additional Max tooling for scheduling effects against relative time in a predefined sequence, video, or audio track.
+
+## Source-of-truth boundaries
+
+Use this page for the approved architectural direction. Use the event pages for payload shape and event semantics. If implementation behavior conflicts with either, raise it for a design decision rather than silently changing the contract.
