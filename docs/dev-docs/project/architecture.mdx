@@ -35,7 +35,7 @@ Max is the performer-facing event source. The `audiaptic-max` repository provide
 - A **connection patch** that maintains the WebSocket connection and sends events to the server.
 - **Event patches** that expose controls and inlets for individual event types, serialize an event as JSON, and pass it to the connection patch.
 
-Max users add the connection patch and the event patches they need to their own Max project. The detailed JSON contract is maintained in the implementation-synced [WebSocket API](../events/websocket-api).
+Max users add the connection patch and the event patches they need to their own Max project. The detailed JSON contract is maintained in the implementation-synced [WebSocket API](/websocket-api).
 
 ### DAVHI server and performance containers
 
@@ -64,7 +64,7 @@ Performance-specific data is temporary and may be removed when a performance is 
 2. The performance container relays the event to the active audience devices as soon as it receives it.
 3. Each client queues and executes the event at the indicated time.
 
-This separates network delivery from effect execution, which is the basis for synchronization across the audience. See the implementation-synced [WebSocket API](../events/websocket-api) for the exact current fields, ordering behavior, and validation expectations.
+This separates network delivery from effect execution, which is the basis for synchronization across the audience. See the implementation-synced [WebSocket API](/websocket-api) for the exact current fields, ordering behavior, and validation expectations.
 
 ## Planned extensions
 
