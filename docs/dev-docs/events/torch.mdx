@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Torch Event
@@ -9,13 +9,15 @@ A `torch` event turns the device flashlight (rear-camera torch) on for a fixed i
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "demo-torch-01",
+  "eventId": "00000000-0000-0000-0000-000000000000",
   "sequence": 43,
   "type": "torch",
   "sentTimestamp": 1730000002000,
-  "execTimestamp": 1730000002500,
+  "epochTimestamp": 1790000000000,
+	"relativeTimestamp": 500,
   "payload": {
     "durationMs": 250,
+    "intensity": 0.75,
     "transitionMs": 0
   }
 }
@@ -24,7 +26,7 @@ A `torch` event turns the device flashlight (rear-camera torch) on for a fixed i
 | Payload field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `durationMs` | integer | Yes | How long the torch remains on. |
-| `intensity` | integer | No | Set torch brightness on supported devices. Default full brightness. |
+| `intensity` | number | No | Set torch brightness on supported devices between 0-1. Default full brightness. |
 | `transitionMs` | integer | No | Time to transition from the current intensity to this event's intensity on supported devices. |
 
 

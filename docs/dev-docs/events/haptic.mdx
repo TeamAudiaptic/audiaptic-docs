@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Haptic Event
@@ -9,14 +9,14 @@ A `haptic` event starts a continuous haptic response at a normalized intensity. 
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "demo-haptic-1",
+  "eventId": "00000000-0000-0000-0000-000000000000",
   "sequence": 42,
   "type": "haptic",
   "sentTimestamp": 1730000000000,
-  "execTimestamp": 1730000000500,
+  "epochTimestamp": 1790000000000,
+	"relativeTimestamp": 500,
   "payload": {
     "intensity": 0.75,
-    "sharpness": 0.4,
     "durationMs": 600,
     "transitionMs": 0
   }
@@ -25,7 +25,6 @@ A `haptic` event starts a continuous haptic response at a normalized intensity. 
 
 | Payload field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `intensity` | number | Yes | Normalized haptic strength. |
-| `sharpness` | number | No | Normalized haptic character, from soft (`0`) to crisp (`1`). Clients without this capability may ignore it. |
+| `intensity` | number | Yes | Normalized haptic strength 0-1. |
 | `durationMs` | integer | Yes | Length of the haptic response. |
 | `transitionMs` | integer | No | Time to transition from the haptic intensity to this event's intensity. |
