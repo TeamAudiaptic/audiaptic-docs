@@ -23,11 +23,12 @@ Every event has the following top-level shape:
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "demo-event-1",
-  "type": "haptic",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "type": "type",
   "sequence": 42,
   "sentTimestamp": 1730000000000,
-  "execTimestamp": 1730000000500,
+  "epochTimestamp": 1790000000000,
+	"relativeTimestamp": 500,
   "payload": {}
 }
 ```
@@ -38,16 +39,17 @@ Every event has the following top-level shape:
 | `eventId` | string | Yes | A unique identifier for this event within the performance session. |
 | `sequence` | integer | Yes | A monotonically increasing sequence number assigned by Max. It gives clients a deterministic order when two events affect the same output at the same time. |
 | `type` | string | Yes | One of the [supported event types](./event-types). |
-| `timestamp` | integer or `null` | Yes | Unix epoch time in milliseconds at which the client should execute the event. Use `null` for “as soon as received.” |
-| `sentTimestamp` | integer | Yes | Unix epoch time in milliseconds at which the event was sent by Max. |
-| `execTimestamp` | integer | Yes | Unix epoch time in milliseconds at which the client should execute the event. |
+| `sentTimestamp` | integer | No | Unix epoch time in milliseconds at which the event was sent by Max. |
+| `epochTimestamp` | integer | No | Unix epoch time in milliseconds at which the client should execute the event. |
+| `relativeTimestamp` | integer | No | Time in milliseconds after recieving a [Start Event](./start) at which the client should execute the event. |
 | `payload` | object | Yes | Properties specific to `type`. |
 
 The event envelope does not include a session ID: the server determines the session from the authenticated Max connection and distributes the event only within that session.
 
 ## Timing and ordering
 
-- Timestamped events should be sent sufficiently before their `execTimestamp` for the server to relay and clients to queue them. A `null` or `0` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
+- Timestamps can be either relative or epoch. Epoch timestamps are absolute, relative timestamps are based on a [Start Event](./start). If both are `null` or `0` the event takes place immediately. An epoch timestamp takes precedence over a relative timestamp if both are present and in the future.
+- Timestamped events should be sent sufficiently before their `epochTimestamp` for the server to relay and clients to queue them. A `null` or `0` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
 - Clients execute each event independently. Multiple events with the same timestamp may therefore begin together (ex: a `haptic`, `screen`, and `caption` event).
 - When two events control the same output at the same timestamp, the higher `sequence` value takes precedence. A newer haptic replaces a haptic already playing; a newer screen event replaces the current screen effect.
 - Durations (included in the payload) are expressed in milliseconds. A duration ends the event and restores the output to its state immediately before that event, unless a later event has already replaced it.
