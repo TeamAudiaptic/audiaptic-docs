@@ -103,3 +103,13 @@ entries:
     emoji: 🔧
     label: Maintenance
     message: Added the OpenAPI docs plugin and theme and the AsyncAPI React component, plus an API docs generation step in the deploy workflow.
+- id: 9
+  pr: 51
+  author: ejs8021
+  time: '2026-10-22T22:09:26+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/51
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Updated event definitions to use relative and epoch timestamps. Added Start event
