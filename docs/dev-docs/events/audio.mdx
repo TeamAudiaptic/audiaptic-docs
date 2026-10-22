@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 9
 ---
 
 # Audio Event
@@ -9,13 +9,14 @@ An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs`
 ```json
 {
   "schemaVersion": "1.0",
-  "eventId": "drone-audio-1",
+  "eventId": "00000000-0000-0000-0000-000000000000",
   "sequence": 47,
   "type": "audio",
   "sentTimestamp": 1730000005000,
-  "execTimestamp": 1730000005500,
+  "epochTimestamp": 1790000000000,
+	"relativeTimestamp": 500,
   "payload": {
-    "assetAlias": "low-drone.mp3",
+    "assetAlias": "example.mp3",
     "startOffsetMs": 12000,
     "durationMs": 5000,
     "transitionMs": 0
