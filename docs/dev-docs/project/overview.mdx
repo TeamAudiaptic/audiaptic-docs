@@ -33,10 +33,10 @@ The system is intentionally session-oriented. It is meant for large, temporary e
 ## Architecture decisions to carry forward
 
 - The audience client is a **native React Native app** for Android and iOS, rather than the browser-only client described in the original proposal. This change enables the haptic and lighting functionality that could not be achieved reliably in iOS browsers.
-- Events carry a Unix-epoch execution time, and the mobile client is responsible for executing them at that time.
+- Events carry an execution time, either an absolute Unix-epoch time or a time relative to the performance's single `start` event, and the mobile client is responsible for executing them at that time.
 - Media belongs to a performance and is stored separately from the real-time event path.
 - A performance is isolated in its own container, which owns its connected Max instance, connected devices, and any performance-specific temporary persistence.
 
 ## Where to go next
 
-Read the [high-level architecture](./architecture) before planning a cross-component change. For the current event contract, see the implementation-synced [WebSocket API](/websocket-api). The architecture page is the source of truth for component boundaries and deployment direction; the synced AsyncAPI specification is the source of truth for the current event schema.
+Read the [high-level architecture](./architecture) before planning a cross-component change. For the event contract, see the [event pages](../events/shared-envelope). The architecture page is the source of truth for component boundaries and deployment direction; the event pages are the source of truth for the event schema. The implementation-synced [WebSocket API](/websocket-api) shows what the server currently implements and may lag behind the event pages.

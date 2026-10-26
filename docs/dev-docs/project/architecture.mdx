@@ -24,7 +24,7 @@ DAHVI connects Max, a per-performance backend, and a native mobile audience clie
 
 ### React Native audience app
 
-The audience client is a React Native app for Android and iOS. A QR code takes an attendee to the app or prompts them to download it. Once connected to a performance, the app receives events and performs them at the scheduled Unix-epoch time.
+The audience client is a React Native app for Android and iOS. A QR code takes an attendee to the app or prompts them to download it. Once connected to a performance, the app receives events and performs them at their scheduled time, either an absolute Unix-epoch time or an offset from the performance's `start` event.
 
 The app maps the requested effect to the device's available native capabilities. This native-client choice is intentional: browser-based iOS clients could not provide the required haptic and flashlight functionality.
 
@@ -35,7 +35,7 @@ Max is the performer-facing event source. The `audiaptic-max` repository provide
 - A **connection patch** that maintains the WebSocket connection and sends events to the server.
 - **Event patches** that expose controls and inlets for individual event types, serialize an event as JSON, and pass it to the connection patch.
 
-Max users add the connection patch and the event patches they need to their own Max project. The detailed JSON contract is maintained in the implementation-synced [WebSocket API](/websocket-api).
+Max users add the connection patch and the event patches they need to their own Max project. The detailed JSON contract is defined in the [event pages](../events/shared-envelope).
 
 ### DAVHI server and performance containers
 
@@ -60,19 +60,44 @@ Performance-specific data is temporary and may be removed when a performance is 
 
 ## Timing and synchronization
 
-1. Max produces an event with a Unix-epoch timestamp.
+1. Max produces an event with an execution time: an `epochTimestamp`, a `relativeTimestamp`, or neither for an immediate, unsynchronized effect.
 2. The performance container relays the event to the active audience devices as soon as it receives it.
 3. Each client queues and executes the event at the indicated time.
 
-This separates network delivery from effect execution, which is the basis for synchronization across the audience. See the implementation-synced [WebSocket API](/websocket-api) for the exact current fields, ordering behavior, and validation expectations.
+This separates network delivery from effect execution, which is the basis for synchronization across the audience.
+
+### Epoch and relative time
+
+- An **`epochTimestamp`** is an absolute Unix-epoch time in milliseconds. Epoch scheduling remains the planned baseline and does not depend on any other event.
+- A **`relativeTimestamp`** is an offset in milliseconds from the execution time of the performance's [`start` event](../events/start). The `start` event anchors the performance timeline, so a pre-authored sequence can be expressed as offsets instead of being converted to epoch time in Max.
+- If an event carries both and the epoch time is in the future, the `epochTimestamp` takes precedence.
+
+### Start event constraints
+
+For the initial release:
+
+- A performance has **exactly one** `start` event. Restarting or re-anchoring the timeline with a second `start` is not supported.
+- A client must **receive the `start` event before** any event that uses a `relativeTimestamp`. A relative time has no meaning on a device that has not received the anchor.
+
+Max is responsible for sending `start` first. The server relays it like any other event, and the client stores its execution time as the anchor for later relative events.
+
+:::warning[Open questions]
+
+- **Late joiners.** A device that joins after `start` was relayed has not received it. Whether the performance container replays the stored `start` to newly connected devices, or relative events are unusable for late joiners, is not yet decided.
+- **Invalid ordering.** How the server and client handle a relative event that arrives before `start`, or a second `start`, is not yet specified in [validation expectations](../events/validation).
+
+:::
+
+The [event pages](../events/shared-envelope) are the source of truth for this contract. The implementation-synced [WebSocket API](/websocket-api) has not caught up: it does not yet include `start`, `epochTimestamp`, or `relativeTimestamp`, and still uses `execTimestamp`. The server, client, and Max implementations should be updated to match the event pages.
 
 ## Planned extensions
 
 - Multiple concurrently configured performance containers.
 - Audience-to-Max event flow and interactive audience input.
 - Zone configuration for effects targeted to portions of the audience.
-- Additional Max tooling for scheduling effects against relative time in a predefined sequence, video, or audio track.
+- Additional Max tooling, such as a timeline patch, for authoring effects as `relativeTimestamp` offsets against a predefined sequence, video, or audio track.
+- Multiple `start` events per performance, for restarting or re-anchoring the timeline.
 
 ## Source-of-truth boundaries
 
-Use this page for the approved architectural direction. Use the event pages for payload shape and event semantics. If implementation behavior conflicts with either, raise it for a design decision rather than silently changing the contract.
+Use this page for the approved architectural direction. Use the [event pages](../events/shared-envelope) as the source of truth for payload shape, timing, and event semantics; the [WebSocket API](/websocket-api) reflects the current implementation only. If implementation behavior conflicts with either, raise it for a design decision rather than silently changing the contract.

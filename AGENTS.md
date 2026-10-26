@@ -11,7 +11,7 @@ Use those documents to identify the owning component. Do not inspect another rep
 
 Unless the task is to change the documentation website itself, read only `audiaptic-docs/docs`. Within it, use `project/` for system direction and boundaries, and `events/` for event contracts.
 
-For a Max-to-client protocol task, also read the implementation-synced [`asyncapi/asyncapi.json`](asyncapi/asyncapi.json), which the site renders as the WebSocket API page. The architecture is authoritative for component boundaries and deployment direction; `asyncapi/asyncapi.json` is authoritative for the current event contract.
+For a Max-to-client protocol task, read the event pages in [`docs/dev-docs/events/`](docs/dev-docs/events/). The architecture is authoritative for component boundaries and deployment direction; `docs/dev-docs/events/` is authoritative for the event contract. [`asyncapi/asyncapi.json`](asyncapi/asyncapi.json), which the site renders as the WebSocket API page, is synced from the server implementation and shows what is currently implemented; where it differs from the event pages, the implementation is behind and should be brought in line with the event pages.
 
 ## Repository routing
 
