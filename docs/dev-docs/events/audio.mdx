@@ -2,9 +2,9 @@
 sidebar_position: 9
 ---
 
-# Start Event
+# Audio Event
 
-A `start` event signals the start of a performace and determines the start time for all future `relativeTimestamps`.
+An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs` allow a Max patch to trigger a clip or a segment of a longer file.
 
 ```json
 {
@@ -16,7 +16,7 @@ A `start` event signals the start of a performace and determines the start time 
   "epochTimestamp": 1790000000000,
 	"relativeTimestamp": 500,
   "payload": {
-    "assetAlias": "low-drone.mp3",
+    "assetAlias": "example.mp3",
     "startOffsetMs": 12000,
     "durationMs": 5000,
     "loop": true,
