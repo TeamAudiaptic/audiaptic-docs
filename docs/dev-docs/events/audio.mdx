@@ -19,6 +19,7 @@ An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs`
     "assetAlias": "example.mp3",
     "startOffsetMs": 12000,
     "durationMs": 5000,
+    "loop": true,
     "transitionMs": 0
   }
 }
@@ -29,4 +30,5 @@ An `audio` event plays a preloaded audio asset. `startOffsetMs` and `durationMs`
 | `assetAlias` | string | Yes | Alias of a session-preloaded audio asset. |
 | `startOffsetMs` | integer | No | Offset from the start of the asset. Defaults to `0`. |
 | `durationMs` | integer | No | Clip length. When omitted, playback continues to the end of the asset. |
+| `loop` | boolean | No | If audio playback should be looped back to the start upon completion until the duration is complete. If duration is missing, loops once. |
 | `transitionMs` | integer | No | Time to fade in the audio. |
