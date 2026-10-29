@@ -113,3 +113,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Updated event definitions to use relative and epoch timestamps. Added Start event
+- id: 10
+  pr: 56
+  author: ejs8021
+  time: '2026-10-29T22:14:46+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/56
+  changes:
+  - type: fix
+    emoji: 🐛
+    label: Fix
+    message: Added loop field to audio event payload to match video.
