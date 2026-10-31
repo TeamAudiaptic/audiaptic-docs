@@ -1,0 +1,8 @@
+{
+  "label": "Project Context",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "The product purpose, current architecture, and decisions that guide DAHVI development."
+  }
+}

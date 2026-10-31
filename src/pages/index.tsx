@@ -17,11 +17,14 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p>
+          Goal: To enhance live performances by providing real time synchronized audio, visual, and haptic feedback directly to an audience member's personal phone.
+        </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="docs/dev-docs/project/overview">
+            Project Overview
           </Link>
         </div>
       </div>
