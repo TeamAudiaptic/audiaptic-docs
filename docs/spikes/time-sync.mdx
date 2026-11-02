@@ -1,0 +1,323 @@
+---
+sidebar_position: 1
+title: Time Synchronization
+description: Plan for synchronizing Max, the DAVHI server, and the mobile clients to one reference clock.
+---
+
+# Time Synchronization
+
+:::info[Status: draft]
+
+This spike proposes how Max, the DAVHI server, and the audience clients agree on time. It ends with three implementation stories. Nothing here is implemented yet, and the decisions marked **Proposed** need team review.
+
+:::
+
+## Problem
+
+DAHVI's synchronization model relies on every device sharing one clock. Max stamps an event with an execution time, the server relays it, and each phone runs it when its own clock reaches that time (see [Timing and synchronization](../dev-docs/project/architecture#timing-and-synchronization)). This only works if those clocks agree.
+
+Today, nothing makes them agree:
+
+- Max stamps `epochTimestamp`, the `start` anchor, and its fallback of `Date.now() + universalDelayMs` with the **performer laptop's** clock (`audiaptic-max/src/connection/connection.js`).
+- The client schedules with raw `Date.now()` on **each phone** (`audiaptic-client/src/lib/eventProcessor.ts`).
+
+Phones set their clocks from the carrier or by NTP, but accuracy isn't guaranteed. Reports range from tens of milliseconds to nearly a second off, and users can turn automatic time off. Windows' default time service is also loose unless it's tuned. So two devices can disagree by far more than the effects can tolerate, even when the network delivers events on time.
+
+## Decision: sync every device to the DAVHI server's clock
+
+**The single most important thing is that every device measures against the same clock.** Agreeing with world time (UTC) doesn't matter for synchronization. If the server ran 3 seconds off UTC but kept steady time, every effect would still land together.
+
+The DAVHI server is that reference:
+
+- Max and every client already connect to it to send or receive events, so no new connection is needed.
+- If each device synced separately to public time servers, their errors would add up. Max 15 ms fast and a phone 15 ms slow would be 30 ms apart. With one reference, every device's error is measured against the same clock.
+- A sync's error is bounded by half the round trip. The trip to the DAVHI server is shorter and more consistent than a trip to a public internet time server.
+- Venue and campus Wi-Fi often block outbound UDP port 123 (NTP). A server endpoint uses the same HTTPS path the app already depends on.
+
+The server's own clock is kept correct by the Linux host's built-in time sync. Performance containers share the host's clock, so every container reports the same time. This plan assumes no extra NTP setup is needed. [Story 1](#verify-the-hosts-time-sync) includes confirming that.
+
+### Why not NTP directly?
+
+NTP is designed to **set a machine's system clock**. A background service on the operating system (chrony, ntpd, Windows Time) polls time servers and gradually adjusts the clock, and applications simply read it.
+
+That model doesn't fit the clients:
+
+- **A React Native app can't set the phone's clock.** iOS and Android don't allow it.
+- NTP from inside the app would need a native UDP module (`react-native-udp`). The client is an Expo-managed app, so that means moving to development builds. It would also hit the UDP blocking above, and each phone would sync to a different public server.
+- The npm NTP packages (`ntp-time`, `precise-time-ntp`, `ntp2`, `ntp-time-sync`) all use Node's UDP module, which React Native doesn't have. They also sync to public servers, not to DAVHI.
+
+So **the goal isn't to correct any device's clock. Each device calculates an accurate offset from the server clock, refreshes it often, and applies it whenever it reads the time:**
+
+```text
+serverTime = Date.now() + offset
+```
+
+The offset is measured with NTP's own four-timestamp method (Cristian's algorithm), just against the DAVHI server instead of a public one.
+
+### How the offset is measured
+
+```text
+client                     server
+  t1  ── request ──────────▶  t2   (server receives)
+  t4  ◀───────── response ──  t3   (server responds)
+
+offset = ((t2 - t1) + (t3 - t4)) / 2     how far the local clock is behind the server
+delay  = (t4 - t1) - (t3 - t2)           network round trip
+error  ≤ delay / 2                       worst case, if the trip is entirely one-sided
+```
+
+The calculation assumes the request and the response take equally long. Any difference becomes error, and the worst case is half the round trip. Round trips vary from one request to the next, mostly because of Wi-Fi power saving, retransmits, and server load. So each sync sends a short burst of requests and keeps the sample with the **smallest delay**, which has the tightest error bound.
+
+## Story 1: Server time endpoint
+
+**Repository:** `audiaptic-server`
+
+### Verify the host's time sync
+
+The server's clock is the reference for every device, so first confirm what keeps it correct. Run these on `davhi.se.rit.edu` itself, not inside a container. Only the steps that change settings need `sudo`.
+
+**1. Is the clock synchronized at all?**
+
+```bash
+timedatectl
+```
+
+Look for `System clock synchronized: yes` and `NTP service: active`. If either says `no` or `inactive`, go to step 5.
+
+**2. Which time service is running?**
+
+```bash
+cat /etc/os-release                # distro, which decides the default service
+systemctl list-units --type=service --all | grep -Ei 'chrony|timesyncd|ntp'
+```
+
+Usually exactly one of these is active:
+
+| Service | Typical on | Kind |
+| --- | --- | --- |
+| `systemd-timesyncd` | Ubuntu, Debian | Simple time-sync client (SNTP) |
+| `chronyd` / `chrony` | RHEL, Rocky, Fedora (`chronyd`); Debian/Ubuntu if installed (`chrony`) | Full NTP |
+| `ntpsec` / `ntp` / `ntpd` | Older or customized systems | Full NTP |
+
+**3. Which servers does it use, and how far off is the clock?** Run the commands for whichever service is active.
+
+`systemd-timesyncd`:
+
+```bash
+timedatectl timesync-status        # current server, poll interval, offset
+cat /etc/systemd/timesyncd.conf; ls /etc/systemd/timesyncd.conf.d/ 2>/dev/null
+```
+
+`chrony`:
+
+```bash
+chronyc tracking                   # "System time" = current offset, "Leap status" should be Normal
+chronyc sources -v                 # servers in use; '*' marks the selected one
+grep -E '^(server|pool|makestep)' /etc/chrony.conf /etc/chrony/chrony.conf 2>/dev/null
+```
+
+`ntpsec` / `ntpd`:
+
+```bash
+ntpq -p                            # servers in use; '*' marks the selected one, offset in ms
+grep -E '^(server|pool)' /etc/ntp.conf /etc/ntpsec/ntp.conf 2>/dev/null
+```
+
+**4. Check two details that affect DAHVI.**
+
+- **Virtual machine?** Run `systemd-detect-virt`. Any answer other than `none` means the hypervisor may also adjust the clock, through VMware Tools, Hyper-V time sync or a `PHC` source in `chronyc sources`. That's fine as long as only one mechanism is in charge. Note which one.
+- **Can the clock jump mid-performance?**
+  - chrony: the `makestep` line controls this. The usual default, `makestep 1.0 3`, only jumps the clock during the first three updates after boot. A negative final number such as `makestep 1 -1` allows a jump at any time. Flag that.
+  - `systemd-timesyncd`: it adjusts small offsets gradually but jumps the clock when the offset is large, roughly 0.4 s or more. That shouldn't happen to a clock that's already synchronized.
+
+Optionally, confirm containers see the host clock by running `date +%s.%N; docker exec <container> date +%s.%N`. The two readings should differ only by the time the command takes.
+
+**5. If the clock isn't synchronized,** coordinate with whoever administers the server, then:
+
+```bash
+sudo timedatectl set-ntp true      # turns on the distro's default service
+```
+
+If nothing is installed, prefer `chrony`. If RIT runs its own NTP servers, ask RIT IT for their names and list those first. They're closest to the server, and the campus firewall may only allow those.
+
+**Record the results** in the server repository's docs, or as a note on this spike: distro, service, servers, typical offset, virtual-machine status, and `makestep` setting (or the equivalent). An offset of a few milliseconds or better is more than enough. All that matters is that the clock is steady, and never jumps mid-performance.
+
+### Proposed: an HTTPS endpoint, not a WebSocket message
+
+| | `GET /api/time` (HTTPS) | Sync message on the WebSocket |
+| --- | --- | --- |
+| Architecture fit | Separate from the event path. The audience socket stays one-way, as the architecture specifies for the initial release. | Adds the first client-to-server message on the audience socket, and a request/response pattern on a channel built for broadcast. |
+| Contract | Documented automatically by the existing Zod + Swagger setup on the **API Docs** page, like `/api/r2/*`. | Changes the event contract on both sockets (event pages and AsyncAPI). Isn't a performance event, but would have to live beside them. |
+| Same for Max and clients | One endpoint and one algorithm for both. | Needs separate handlers on `/performer` and `/audience/davhi`. |
+| When it's available | Before joining a performance, and unaffected by socket reconnect logic. | Only while a socket is open. |
+| Testing | `curl` or any HTTP client. | Needs a WebSocket client. |
+| Accuracy | Slightly more per-request overhead: HTTP headers and proxy routing. The first request also pays for TCP and TLS setup. | Slightly less overhead on an already-open connection. Messages can queue behind event traffic. |
+
+The HTTPS endpoint is the better choice. Its accuracy cost is small and mostly removed by the algorithm:
+
+- Fetch reuses the connection after the first request (keep-alive), so later requests skip setup.
+- The client throws away the first, warm-up sample.
+- Keeping the lowest-delay sample filters out slow requests, whichever transport is used.
+
+The WebSocket option's real advantage is lower overhead. That's worth revisiting only if measured error turns out to be too high (see [Validation](#validation)).
+
+### Proposed schema
+
+`GET /api/time` takes no parameters. The client records `t1` and `t4` itself, and requests within a burst are sent one at a time, so no request ID is needed.
+
+**Response `200`:**
+
+```json
+{
+  "schemaVersion": "1.0",
+  "receivedTimestamp": 1790000000123.412,
+  "sentTimestamp": 1790000000123.587
+}
+```
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `schemaVersion` | string | Matches the event envelope's versioning. |
+| `receivedTimestamp` | number | `t2`: when the server received the request, in Unix-epoch milliseconds. |
+| `sentTimestamp` | number | `t3`: when the server sent the response, in Unix-epoch milliseconds. |
+
+Both timestamps are **fractional** milliseconds. Whole milliseconds would add up to 1 ms of rounding error to every sample. The names follow the envelope's existing `sentTimestamp`.
+
+Zod schema, in the style of `api/src/api-schemas`:
+
+```ts
+export class APITime {
+  static readonly route = {
+    description: 'Server clock reading for client clock-offset calculation',
+    tags: ['Time'],
+    response: {
+      200: z.object({
+        schemaVersion: z.literal('1.0'),
+        receivedTimestamp: z.number().positive(),
+        sentTimestamp: z.number().positive(),
+      }),
+    },
+  } as const;
+}
+```
+
+### Implementation notes
+
+- Compute high-resolution epoch time with `performance.timeOrigin + performance.now()`.
+- Capture `receivedTimestamp` as early as possible, in an `onRequest` hook, and `sentTimestamp` as late as possible, just before sending.
+- Set `Cache-Control: no-store`, so no proxy or client cache ever returns a stale time.
+- No authentication. The endpoint reveals nothing but the current time.
+- Leave the endpoint out of the request log, or log it at debug level only. A full audience re-syncing would otherwise flood the log.
+- Load is small. 1,000 phones sending a 5-request burst every 60 s is about 85 requests per second.
+- The host clock is shared by all containers, so the route returns the same reading whichever process serves it. This holds once multiple performance containers exist.
+
+### Acceptance criteria
+
+- The host's time sync has been checked as described above: `System clock synchronized: yes`, and the service, servers, offset and jump behavior are recorded.
+- `GET /api/time` returns the schema above, and appears on the API Docs page.
+- `t2 ≤ t3`, and the server's processing time (`t3 - t2`) is under 1 ms in normal operation.
+- Responses are never cached.
+
+## Story 2: Mobile client sync
+
+**Repository:** `audiaptic-client`
+
+### Algorithm
+
+One **burst**:
+
+1. Send 6 sequential `GET /api/time` requests, each starting after the previous one returns.
+2. For each, record `t1` just before sending and `t4` on receipt, then compute `offset` and `delay`.
+3. Discard the first sample (connection warm-up) and any failed or timed-out requests (2 s timeout).
+4. Keep the sample with the **lowest delay**. Its `offset` becomes the device offset, with `error = delay / 2`.
+
+Store `{ offset, error, syncedAt }`. Replace every use of `Date.now()` that compares against event time with a single `serverNow()` helper. That helper becomes the only clock the event processor uses. It returns `Date.now() + offset`.
+
+**Accepting a new offset:** a burst made under poor network conditions shouldn't replace a good offset. Accept the new result if its error is no worse than twice the current error, or if the current offset is more than 5 minutes old. Otherwise keep the current offset and retry in 10 s.
+
+**Pending timers:** events are scheduled with `setTimeout(time - now)`. If an accepted offset moves by more than 5 ms, recompute the delays of pending timers. Smaller changes can wait for the next event.
+
+**Before the first sync:** keep events in the existing queue rather than scheduling them on the unsynced clock. Run the first burst as soon as the app knows which server it's using, ideally while the user is joining, so it's normally finished before the socket connects.
+
+### Proposed: how often the offset is calculated
+
+Three things make an offset go stale:
+
+| Cause | Size | Handling |
+| --- | --- | --- |
+| **Clock drift.** The phone's clock runs slightly fast or slow. | Typically 10–20 ppm, about 1 ms per minute. 50 ppm (about 3 ms per minute) in bad cases. | Periodic re-sync. |
+| **Clock steps.** The OS corrects the phone's clock from the carrier or NTP. | Can be hundreds of milliseconds, at any moment. | Detect locally and re-sync immediately. |
+| **Network or app changes.** Wi-Fi ↔ cellular, a different access point, the app backgrounded and resumed. | Changes the round trip; timers are paused while backgrounded. | Re-sync on the event. |
+
+Recommendation:
+
+- **On join:** a full burst before acting on timed events.
+- **Every 60 s while connected:** a full burst.
+  - Drift between syncs then stays around 1 ms, or 3 ms at worst.
+  - Each burst takes a fraction of a second and a few hundred bytes.
+  - Five minutes would allow up to about 15 ms of drift at the worst rate, which is too much of the timing budget. A few seconds would add load and gain nothing.
+- **Immediately** when:
+  - The app returns to the foreground.
+  - The network type changes (via `expo-network` or `NetInfo`).
+  - The socket reconnects.
+  - A clock step is detected: about every 5 s, compare how far `Date.now()` and the monotonic `performance.now()` have each advanced since the last check. If they differ by more than 5 ms, the OS changed the clock.
+
+Clock-step detection is a local check with no network traffic. It catches the one change periodic syncs can't: a sudden clock change halfway through the 60 s interval.
+
+### Acceptance criteria
+
+- The event processor reads time only through `serverNow()`.
+- The debug view (`EventDebugView`) shows the current offset, error, and time since the last sync.
+- Timed events received before the first sync are scheduled correctly once it completes.
+- Manually changing the phone's clock during a session triggers a re-sync within about 5 s, and events still run on time.
+
+## Story 3: Max sync
+
+**Repository:** `audiaptic-max`
+
+### Algorithm
+
+The connection patch's `connection.js` (Node for Max) uses **the same burst algorithm and the same acceptance rule** as the client. Node's built-in `fetch` and `performance.now()` make this a direct port. Every timestamp Max produces then uses `serverNow()` instead of `Date.now()`:
+
+- `epochTimestamp`, including the `start` event's execution time, which anchors every `relativeTimestamp`.
+- The fallback `serverNow() + universalDelayMs` for events with no time.
+- `sentTimestamp`, so server-side latency logs compare like with like.
+
+The two code bases can't share a module, so write the algorithm down once in this spike (above) and implement it in both.
+
+Add a `sync` outlet that reports offset, error, and age, so performers can see whether they're synced. If Max has never synced, timed events should still send, but the patch should post a warning to the Max console.
+
+### Proposed: how often the offset is calculated
+
+Max matters most at two moments: when it stamps `start`, because every relative event depends on it, and when it stamps absolute or fallback times. Between those moments, a slightly stale offset only affects `sentTimestamp`.
+
+The performer laptop is usually plugged in, on a stable network, and not backgrounded. Its clock can still be stepped by the OS, and Windows Time in particular makes occasional large corrections.
+
+Recommendation:
+
+- **On connect:** a full burst before sending anything timed.
+- **Every 60 s while connected:** the same interval as the client. This is a handful of requests per minute from one machine, so there's no reason for a different interval.
+- **Immediately** on socket reconnect or a detected clock step, using the same 5 s check as the client.
+- **Before sending `start`:** if the last sync is more than 30 s old, run a burst first. This adds well under a second before `start` is sent. Its execution time is normally scheduled ahead, so the extra delay doesn't move the effect.
+
+### Acceptance criteria
+
+- No timestamp Max sends is taken from raw `Date.now()`.
+- The `sync` outlet reports offset, error, and age.
+- Changing the laptop's clock by several seconds mid-session doesn't change when events run on the clients.
+
+## Validation
+
+Accuracy isn't guaranteed: Wi-Fi conditions dominate the error. Before relying on a target, measure it:
+
+1. Log `error` from every client burst. The share of syncs under 10 ms on venue Wi-Fi is the first number to watch.
+2. Put several phones (iOS and Android, Wi-Fi and cellular) side by side. Fire a `torch` or `color` event scheduled 2 s ahead, and record them with a high-frame-rate phone camera. 240 fps gives roughly 4 ms resolution.
+3. Repeat with the phones' clocks deliberately set seconds off, to show the offset, not the phone's clock, controls timing.
+
+If measured spread is too large, revisit in this order: more samples per burst, more frequent bursts, then the WebSocket transport.
+
+## Open questions
+
+- **Contract wording.** Once this lands, `epochTimestamp` effectively means "Unix-epoch milliseconds **on the DAVHI server's clock**." The [shared envelope](../dev-docs/events/shared-envelope) and the architecture's timing section should say so.
+- **Reverse proxy.** Confirm what sits in front of `/api` on `davhi.se.rit.edu`, and that it allows connection reuse (keep-alive) to the client.
+- **Timer precision.** Synchronizing clocks doesn't make JavaScript timers fire exactly on time. `setTimeout` in React Native can be several milliseconds late, more under load. Effect-start accuracy on the device is a separate spike.
