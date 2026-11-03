@@ -1,0 +1,55 @@
+---
+slug: changelog-2026-11-03
+title: 'Changelog: November 3, 2026'
+authors: [Darren, Elijah, Josh, Kristen]
+tags: [changelog, changes-client, changes-docs, changes-max, changes-server]
+date: 2026-11-03
+---
+
+**13 changes** across **4 repos** from **4 contributors**.
+
+{/* truncate */}
+
+## Server
+
+### Josh (@Josh-mitch)
+
+✨ **Feature** Audience websocket created with code "davhi" and forwarding only haptic events [#49](https://github.com/TeamAudiaptic/audiaptic-server/pull/49)
+
+## Client
+
+### Darren (@dcr8024)
+
+💥 **Breaking change** Events now use `epochTimestamp` / `relativeTimestamp` with a `start` event instead of `execTimestamp`, matching the updated event docs [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+✨ **Feature** Join a concert by code; the client downloads the concert's media listed in its R2 `index.json`, and deletes it on leave [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+✨ **Feature** Image, audio and full-screen video events play downloaded assets, supporting `startOffsetMs`, `durationMs`, `loop` and fade-in [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+✨ **Feature** Kahoot-style code entry home screen and a simplified concert screen with an image area and a compact event log [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+♻️ **Refactor** Moved all component styling into CSS files under `src/styles/` [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+🔧 **Maintenance** Added `expo-file-system`, `expo-audio` and `expo-video` (requires a native rebuild) [#43](https://github.com/TeamAudiaptic/audiaptic-client/pull/43)
+
+### Kristen (@fangkristen)
+
+✨ **Feature** Strobing flashlight [#42](https://github.com/TeamAudiaptic/audiaptic-client/pull/42)
+
+✨ **Feature** Added iOS Core Haptics output module and session hook to play continuous haptic events with intensity, sharpness, duration, and fade transitions. [#40](https://github.com/TeamAudiaptic/audiaptic-client/pull/40)
+
+## Max/MSP
+
+### Elijah (@ejs8021)
+
+✨ **Feature** Image Max Patch [#43](https://github.com/TeamAudiaptic/audiaptic-max/pull/43)
+
+✨ **Feature** Max patches for audio and video events [#54](https://github.com/TeamAudiaptic/audiaptic-max/pull/54)
+
+## Docs
+
+### Josh (@Josh-mitch)
+
+📝 **Documentation** Added architecture documentation [#49](https://github.com/TeamAudiaptic/audiaptic-docs/pull/49)
+
+📝 **Documentation** Instructions for connecting to the audience websocket locally [#57](https://github.com/TeamAudiaptic/audiaptic-docs/pull/57)
