@@ -123,3 +123,13 @@ entries:
     emoji: 🐛
     label: Fix
     message: Added loop field to audio event payload to match video.
+- id: 11
+  pr: 49
+  author: Josh-mitch
+  time: '2026-11-03T19:17:10+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/49
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Added architecture documentation
