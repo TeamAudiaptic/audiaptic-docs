@@ -114,6 +114,12 @@ const config: Config = {
           position: 'left',
           label: 'Dev Docs',
         },
+        {
+          type: 'docSidebar',
+          sidebarId: 'spikesSidebar',
+          position: 'left',
+          label: 'Research Spikes',
+        },
         { to: '/blog', label: 'Changelog', position: 'left' },
         {
           href: 'https://github.com/TeamAudiaptic/audiaptic-docs',
