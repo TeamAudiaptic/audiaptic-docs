@@ -133,3 +133,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Added architecture documentation
+- id: 12
+  pr: 57
+  author: Josh-mitch
+  time: '2026-11-03T22:18:43+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/57
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Instructions for connecting to the audience websocket locally
