@@ -8,6 +8,10 @@
       {
         "name": "performer",
         "description": "The performer driving the show. Will require authentication."
+      },
+      {
+        "name": "audience",
+        "description": "Audience devices receiving the show."
       }
     ]
   },
@@ -63,6 +67,39 @@
         },
         "ack500": {
           "$ref": "#/components/messages/ack500"
+        }
+      }
+    },
+    "audience": {
+      "address": "/audience/{code}",
+      "title": "Audience",
+      "description": "Audience devices will receive the show events the performer sends, unchanged, once each event type is implemented. Devices send nothing back yet. If the join code is invalid, the server closes the socket with close code 4404 and reason \"Invalid join code\".",
+      "parameters": {
+        "code": {
+          "description": "The performance join code. Only `davhi` is valid for now."
+        }
+      },
+      "messages": {
+        "audioEvent": {
+          "$ref": "#/components/messages/audioEvent"
+        },
+        "captionEvent": {
+          "$ref": "#/components/messages/captionEvent"
+        },
+        "colorEvent": {
+          "$ref": "#/components/messages/colorEvent"
+        },
+        "hapticEvent": {
+          "$ref": "#/components/messages/hapticEvent"
+        },
+        "imageEvent": {
+          "$ref": "#/components/messages/imageEvent"
+        },
+        "startEvent": {
+          "$ref": "#/components/messages/startEvent"
+        },
+        "torchEvent": {
+          "$ref": "#/components/messages/torchEvent"
         }
       }
     }
@@ -134,6 +171,42 @@
       "tags": [
         {
           "name": "performer"
+        }
+      ]
+    },
+    "audienceReceivesEvent": {
+      "action": "send",
+      "title": "Receive an event",
+      "summary": "Server → audience: a show event relayed from the performer.",
+      "channel": {
+        "$ref": "#/channels/audience"
+      },
+      "messages": [
+        {
+          "$ref": "#/channels/audience/messages/audioEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/captionEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/colorEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/hapticEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/imageEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/startEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/torchEvent"
+        }
+      ],
+      "tags": [
+        {
+          "name": "audience"
         }
       ]
     }
