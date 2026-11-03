@@ -1,0 +1,42 @@
+---
+sidebar_position: 1
+---
+
+# Project Overview
+
+DAHVI (Distributed Audio Haptic Visual Interface) is a real-time, distributed performance system for shared musical and multimedia experiences. A performer or composer uses Max to direct the audience's devices during a live event. Each audience device can present synchronized audio, visual, haptic, and flashlight effects, allowing people to participate through more than sound alone.
+
+The project is designed for inclusive performance contexts, including hearing, Deaf, and hard-of-hearing audiences. Its goal is not simply to mirror audio on a phone: it is to create a coordinated, multimodal experience across a transient audience.
+
+## Who uses it
+
+- **Performers and composers** add DAHVI Max patches to their Max project and send performance events.
+- **Performance operators** configure a performance and upload the media it needs.
+- **Audience members** scan a performance QR code, open the DAHVI mobile app or are prompted to install it, and receive the experience on their device.
+
+## What happens during a performance
+
+1. An operator prepares the performance's media, such as images, video, and audio.
+2. An audience member joins the performance from its QR code and connects with the mobile app.
+3. Max sends timestamped events to the active performance.
+4. The service distributes those events to connected audience devices.
+5. Each mobile app executes an event locally at its scheduled time, producing the requested output when the device supports it.
+
+This local scheduling model is important: it gives all devices a common intended execution time rather than making the relay's arrival time the start of the effect.
+
+## Current scope
+
+The initial system supports one-way, performer-to-audience events. The baseline outputs are audio, visual content and color, captions, haptics, and flashlight effects. Media is prepared for the performance instead of being streamed with each event.
+
+The system is intentionally session-oriented. It is meant for large, temporary event audiences rather than persistent social accounts or long-lived personal sessions.
+
+## Architecture decisions to carry forward
+
+- The audience client is a **native React Native app** for Android and iOS, rather than the browser-only client described in the original proposal. This change enables the haptic and lighting functionality that could not be achieved reliably in iOS browsers.
+- Events carry an execution time, either an absolute Unix-epoch time or a time relative to the performance's single `start` event, and the mobile client is responsible for executing them at that time.
+- Media belongs to a performance and is stored separately from the real-time event path.
+- A performance is isolated in its own container, which owns its connected Max instance, connected devices, and any performance-specific temporary persistence.
+
+## Where to go next
+
+Read the [high-level architecture](./architecture) before planning a cross-component change. For the event contract, see the [event pages](../events/shared-envelope). The architecture page is the source of truth for component boundaries and deployment direction; the event pages are the source of truth for the event schema. The implementation-synced [WebSocket API](/websocket-api) shows what the server currently implements and may lag behind the event pages.

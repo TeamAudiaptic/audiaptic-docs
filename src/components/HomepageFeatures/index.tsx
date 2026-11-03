@@ -11,32 +11,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'DAVHI Mobile App',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Our mobile app allows you to connect to live performances.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Performance Portal',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Enhance your performance by uploading media to the Performance Portal. 
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Max Extensions',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Control your performances Max by sending events to connected devices through our Max patches. 
       </>
     ),
   },

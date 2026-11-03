@@ -1,0 +1,8 @@
+{
+  "label": "Development Setup",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Instructions for setting up recommended dev environments."
+  }
+}

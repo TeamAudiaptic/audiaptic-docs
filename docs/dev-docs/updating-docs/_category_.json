@@ -1,0 +1,8 @@
+{
+  "label": "Updating These Docs",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Instructions for updating this documentation."
+  }
+}
