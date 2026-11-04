@@ -5,3 +5,15 @@ sidebar_position: 12
 # Validation Expectations
 
 The server should reject an event when its version or type is unknown, a required field is missing, a value falls outside its documented range, an asset alias is not registered for the session, or a timestamp or duration is invalid. It should return a structured error to the Max connection and never forward an invalid event to audience devices.
+
+## Lists of events
+
+When a [frame](./shared-envelope#frames) contains a list, the server validates each event on its own:
+
+- Valid events are relayed to the audience, in frame order, even if other events in the same frame are rejected.
+- Invalid events are left out of the relayed list.
+- An event whose `eventId` repeats an earlier event in the same frame is rejected. The first event with that `eventId` is processed normally. `eventId` uniqueness is only checked within a single frame for now, not across a whole performance.
+
+If the frame itself is unusable (it is not valid JSON, is not an event or array, or the array is empty or longer than 500 events), the server rejects the whole frame and relays nothing.
+
+The server reports the outcome of every frame in one [acknowledgement](./acknowledgements), which lists the accepted events and the errors for each rejected event.
