@@ -62,7 +62,9 @@ Acks do not carry an identifier for the frame. The server answers frames in the 
 
 ## Oversized frames
 
-A frame larger than 1 MiB is not acknowledged. The server closes the WebSocket connection with close code `1009` (message too big). Split large timelines into several frames of at most 500 events.
+As a safeguard against a runaway frame, for example from a patch stuck in a loop, the server closes the WebSocket connection with close code `1009` (message too big) when a frame is larger than 8 MiB (8,388,608 bytes). The frame is not acknowledged.
+
+A valid frame never reaches this limit: even 500 events with every field at its maximum length are well under it. A frame with too many events gets a `422` ack instead. To send a timeline longer than 500 events, split it into several frames.
 
 ## Examples
 

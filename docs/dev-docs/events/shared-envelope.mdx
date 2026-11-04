@@ -62,7 +62,7 @@ The array example leaves out timestamps and payload fields to stay short; each e
 | Rule | Value |
 | --- | --- |
 | Events per frame | 1 to 500. An empty list or a list of more than 500 events is rejected. |
-| Frame size | At most 1 MiB (1,048,576 bytes). A larger frame closes the connection. See [Acknowledgements](./acknowledgements#oversized-frames). |
+| Frame size | No practical limit for a valid frame. The 500-event limit is the one Max will reach. A server safeguard closes the connection for a frame over 8 MiB, far larger than any valid list. See [Acknowledgements](./acknowledgements#oversized-frames). |
 | Order | The server processes a list in order and keeps that order when relaying it. |
 | Duplicate `eventId` | Within one frame, the first event with an `eventId` is processed and any later event with the same `eventId` is rejected. Duplicates are not yet checked across frames or across a performance. |
 
