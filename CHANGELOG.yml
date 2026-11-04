@@ -143,3 +143,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Instructions for connecting to the audience websocket locally
+- id: 13
+  pr: 62
+  author: Josh-mitch
+  time: '2026-11-04T03:57:12+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/62
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Updated proposed schema for the time endpoint
