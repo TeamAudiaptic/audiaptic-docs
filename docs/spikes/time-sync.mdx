@@ -52,19 +52,22 @@ So **the goal isn't to correct any device's clock. Each device calculates an acc
 serverTime = Date.now() + offset
 ```
 
-The offset is measured with NTP's own four-timestamp method (Cristian's algorithm), just against the DAVHI server instead of a public one.
+The offset is measured with Cristian's algorithm, the round-trip method NTP is built on, just against the DAVHI server instead of a public one.
 
 ### How the offset is measured
 
 ```text
 client                     server
-  t1  ── request ──────────▶  t2   (server receives)
-  t4  ◀───────── response ──  t3   (server responds)
+  t1  ── request ──────────▶
+                              T    (server reads its clock)
+  t4  ◀───────── response ──
 
-offset = ((t2 - t1) + (t3 - t4)) / 2     how far the local clock is behind the server
-delay  = (t4 - t1) - (t3 - t2)           network round trip
-error  ≤ delay / 2                       worst case, if the trip is entirely one-sided
+offset = T - (t1 + t4) / 2       how far the local clock is behind the server
+delay  = t4 - t1                 network round trip
+error  ≤ delay / 2               worst case, if the trip is entirely one-sided
 ```
+
+Full NTP has the server send two timestamps, when it received the request and when it replied, so its processing time can be removed from the round trip. The DAVHI endpoint only reads the clock, which takes microseconds, so a single timestamp gives the same result. Any request that does stall, for example while the server is relaying an event, has a longer round trip, and the filter below discards it.
 
 The calculation assumes the request and the response take equally long. Any difference becomes error, and the worst case is half the round trip. Round trips vary from one request to the next, mostly because of Wi-Fi power saving, retransmits, and server load. So each sync sends a short burst of requests and keeps the sample with the **smallest delay**, which has the tightest error bound.
 
@@ -169,19 +172,17 @@ The WebSocket option's real advantage is lower overhead. That's worth revisiting
 
 ```json
 {
-  "schemaVersion": "1.0",
-  "receivedTimestamp": 1790000000123.412,
-  "sentTimestamp": 1790000000123.587
+  "serverTimestamp": 1790000000123.412
 }
 ```
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `schemaVersion` | string | Matches the event envelope's versioning. |
-| `receivedTimestamp` | number | `t2`: when the server received the request, in Unix-epoch milliseconds. |
-| `sentTimestamp` | number | `t3`: when the server sent the response, in Unix-epoch milliseconds. |
+| `serverTimestamp` | number | `T`: the server's clock when it handled the request, in Unix-epoch milliseconds. |
 
-Both timestamps are **fractional** milliseconds. Whole milliseconds would add up to 1 ms of rounding error to every sample. The names follow the envelope's existing `sentTimestamp`.
+The timestamp is in **fractional** milliseconds. Whole milliseconds would add up to 1 ms of rounding error to every sample.
+
+The response isn't versioned. It isn't part of the event envelope, and a future change can add fields without breaking existing clients.
 
 Zod schema, in the style of `api/src/api-schemas`:
 
@@ -192,9 +193,7 @@ export class APITime {
     tags: ['Time'],
     response: {
       200: z.object({
-        schemaVersion: z.literal('1.0'),
-        receivedTimestamp: z.number().positive(),
-        sentTimestamp: z.number().positive(),
+        serverTimestamp: z.number().positive(),
       }),
     },
   } as const;
@@ -204,18 +203,18 @@ export class APITime {
 ### Implementation notes
 
 - Compute high-resolution epoch time with `performance.timeOrigin + performance.now()`.
-- Capture `receivedTimestamp` as early as possible, in an `onRequest` hook, and `sentTimestamp` as late as possible, just before sending.
+- Read `serverTimestamp` in the handler, immediately before sending the reply, with no other work in between.
 - Set `Cache-Control: no-store`, so no proxy or client cache ever returns a stale time.
 - No authentication. The endpoint reveals nothing but the current time.
 - Leave the endpoint out of the request log, or log it at debug level only. A full audience re-syncing would otherwise flood the log.
-- Load is small. 1,000 phones sending a 5-request burst every 60 s is about 85 requests per second.
+- Load is small. 1,000 phones sending a 6-request burst every 60 s is about 100 requests per second.
 - The host clock is shared by all containers, so the route returns the same reading whichever process serves it. This holds once multiple performance containers exist.
 
 ### Acceptance criteria
 
 - The host's time sync has been checked as described above: `System clock synchronized: yes`, and the service, servers, offset and jump behavior are recorded.
 - `GET /api/time` returns the schema above, and appears on the API Docs page.
-- `t2 ≤ t3`, and the server's processing time (`t3 - t2`) is under 1 ms in normal operation.
+- `serverTimestamp` has sub-millisecond precision.
 - Responses are never cached.
 
 ## Story 2: Mobile client sync
