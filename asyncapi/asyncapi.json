@@ -250,7 +250,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -282,6 +282,9 @@
                   "minimum": 0,
                   "maximum": 600000
                 },
+                "loop": {
+                  "type": "boolean"
+                },
                 "transitionMs": {
                   "type": "integer",
                   "minimum": 0,
@@ -299,7 +302,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -331,7 +334,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -369,7 +372,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -401,7 +404,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -446,7 +449,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -478,7 +481,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -524,7 +527,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -556,7 +559,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -600,7 +603,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -632,7 +635,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -657,7 +660,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -689,7 +692,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -714,7 +717,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type"
           ],
           "additionalProperties": false
@@ -745,7 +748,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -791,7 +794,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -823,7 +826,7 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
-            "execTimestamp": {
+            "epochTimestamp": {
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
@@ -875,7 +878,7 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "execTimestamp",
+            "epochTimestamp",
             "type",
             "payload"
           ],
