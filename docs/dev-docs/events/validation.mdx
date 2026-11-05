@@ -14,6 +14,6 @@ When a [frame](./shared-envelope#frames) contains a list, the server validates e
 - Invalid events are left out of the relayed list.
 - An event whose `eventId` repeats an earlier event in the same frame is rejected. The first event with that `eventId` is processed normally. `eventId` uniqueness is only checked within a single frame for now, not across a whole performance.
 
-If the frame itself is unusable (it is not valid JSON, is not an event or array, or the array is empty or longer than 500 events), the server rejects the whole frame and relays nothing.
+If the frame itself is unusable (it is not valid JSON, is not an event or array, or the array is empty or longer than the event limit, 500 by default), the server rejects the whole frame and relays nothing.
 
 The server reports the outcome of every frame in one [acknowledgement](./acknowledgements), which lists the accepted events and the errors for each rejected event.

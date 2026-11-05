@@ -48,7 +48,7 @@ The server checks these conditions in order and uses the first that applies:
 | Order | Status | When | Relayed to the audience |
 | --- | --- | --- | --- |
 | 1 | `400` | The frame is not valid JSON. | Nothing |
-| 2 | `422` | The frame is not an event object or an array, the array is empty, or it has more than 500 events. Also used when no event in the frame is valid. | Nothing |
+| 2 | `422` | The frame is not an event object or an array, the array is empty, or it has more events than the limit (500 by default). Also used when no event in the frame is valid. | Nothing |
 | 3 | `500` | The events were valid, but the server failed to send them to the audience. The valid events are still listed in `accepted`, and the reason is in `errors`. | Nothing, or not reliably |
 | 4 | `207` | Partial success: some events were accepted and some were rejected. | The valid show events, if any |
 | 5 | `202` | Every event was valid, and at least one show event was relayed. | Every event except `ping` |
@@ -62,9 +62,9 @@ Acks do not carry an identifier for the frame. The server answers frames in the 
 
 ## Oversized frames
 
-As a safeguard against a runaway frame, for example from a patch stuck in a loop, the server closes the WebSocket connection with close code `1009` (message too big) when a frame is larger than 8 MiB (8,388,608 bytes). The frame is not acknowledged.
+As a safeguard against a runaway frame, for example from a patch stuck in a loop, the server closes the WebSocket connection with close code `1009` (message too big) when a frame is larger than the size limit, 8 MiB (8,388,608 bytes) by default. The frame is not acknowledged.
 
-A valid frame never reaches this limit: even 500 events with every field at its maximum length are well under it. A frame with too many events gets a `422` ack instead. To send a timeline longer than 500 events, split it into several frames.
+A valid frame never reaches this limit: the server will not start with a size limit too small to hold the event limit's worth of events, even with every field at its maximum length. A frame with too many events gets a `422` ack instead. To send a timeline longer than the event limit, split it into several frames.
 
 ## Examples
 
