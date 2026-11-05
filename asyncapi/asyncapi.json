@@ -53,6 +53,9 @@
         "torchEvent": {
           "$ref": "#/components/messages/torchEvent"
         },
+        "videoEvent": {
+          "$ref": "#/components/messages/videoEvent"
+        },
         "ack200": {
           "$ref": "#/components/messages/ack200"
         },
@@ -100,6 +103,9 @@
         },
         "torchEvent": {
           "$ref": "#/components/messages/torchEvent"
+        },
+        "videoEvent": {
+          "$ref": "#/components/messages/videoEvent"
         }
       }
     }
@@ -136,6 +142,9 @@
         },
         {
           "$ref": "#/channels/performer/messages/torchEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/videoEvent"
         }
       ],
       "tags": [
@@ -202,6 +211,9 @@
         },
         {
           "$ref": "#/channels/audience/messages/torchEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/videoEvent"
         }
       ],
       "tags": [
@@ -703,8 +715,7 @@
             "sequence",
             "sentTimestamp",
             "execTimestamp",
-            "type",
-            "payload"
+            "type"
           ],
           "additionalProperties": false
         }
@@ -771,6 +782,90 @@
                 "durationMs",
                 "intensity",
                 "transitionMs"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "eventId",
+            "sequence",
+            "sentTimestamp",
+            "execTimestamp",
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "videoEvent": {
+        "name": "video",
+        "title": "video event",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "eventId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "execTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "relativeTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "video"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {
+                "assetAlias": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "startOffsetMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                },
+                "loop": {
+                  "type": "boolean"
+                },
+                "transitionMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 600000
+                }
+              },
+              "required": [
+                "assetAlias"
               ],
               "additionalProperties": false
             }
