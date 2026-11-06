@@ -73,7 +73,7 @@ On your phone, go to `http://<IP Address>:5173`, or `http://<IP Address>` if you
 
 Open the **Test Session** tab. The page connects to `ws://<IP Address>:3000/api/audience/davhi` and should show **Connected**. The API window also logs `Audience device connected. 1 connected.`
 
-Events relayed to the audience appear on this page as they arrive, newest first, with the time each was received. The server always sends audience devices a JSON array of events, even when Max sent a single event. See [what audience devices receive](../events/shared-envelope#what-audience-devices-receive).
+Events relayed to the audience appear on this page as they arrive, newest first, with the time each was received. The server sends audience devices a single event when Max sent a single event, and a JSON array of events when Max sent a list. See [what audience devices receive](../events/shared-envelope#what-audience-devices-receive).
 
 ### Invalid join codes
 
