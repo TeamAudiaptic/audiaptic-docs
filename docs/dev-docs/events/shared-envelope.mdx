@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Shared Event Envelope
 
-These pages define the proposed JSON messages Max patches send to the relay server during a performance. The server validates an event and distributes it to every device in the active session. Clients schedule an event locally, so a timestamped event can begin at the same intended moment on every device.
+These pages define the proposed JSON messages Max patches send to the relay server during a performance. Max sends one event or a list of events in each WebSocket message. The server validates each event and distributes the valid ones to every device in the active session. Clients schedule an event locally, so a timestamped event can begin at the same intended moment on every device.
 
 ## Status
 
@@ -45,6 +45,47 @@ Every event has the following top-level shape:
 | `payload` | object | Yes | Properties specific to `type`. |
 
 The event envelope does not include a session ID: the server determines the session from the authenticated Max connection and distributes the event only within that session.
+
+## Frames
+
+A frame is one WebSocket message. Max can send either a single event object or a JSON array of event objects:
+
+```json
+[
+  { "schemaVersion": "1.0", "eventId": "evt-1", "type": "start", "sequence": 1, "epochTimestamp": 123456789, "payload": {} },
+  { "schemaVersion": "1.0", "eventId": "evt-2", "type": "haptic", "sequence": 2, "relativeTimestamp": 500, "payload": {} }
+]
+```
+
+The array example leaves out timestamps and payload fields to stay short; each event in it has the full envelope.
+
+| Rule | Value |
+| --- | --- |
+| Events per frame | 1 to 500 by default. An empty list or a list over the limit is rejected. |
+| Frame size | No practical limit for a valid frame. The event limit is the one Max will reach. A server safeguard closes the connection for a frame over 8 MiB by default, far larger than any valid list. See [Acknowledgements](./acknowledgements#oversized-frames). |
+| Order | The server processes a list in order and keeps that order when relaying it. |
+| Duplicate `eventId` | Within one frame, the first event with an `eventId` is processed and any later event with the same `eventId` is rejected. Duplicates are not yet checked across frames or across a performance. |
+
+Both limits are server settings (`MAX_EVENTS_PER_FRAME` and `MAX_FRAME_BYTES`), so a deployment can change them. The server refuses to start if the size limit is too small for the event limit, so a valid frame can never close the connection.
+
+The server validates and acknowledges a single event exactly like a list containing one event. The only difference is what audience devices receive.
+
+Each event in a list is validated on its own. Valid events are relayed even when others in the same frame are rejected (see [Validation Expectations](./validation)). The server answers every frame with exactly one [acknowledgement](./acknowledgements).
+
+### What audience devices receive
+
+Audience devices receive frames in the same form Max sent them, and a Max frame produces at most one audience frame:
+
+| Max sent | Audience devices receive |
+| --- | --- |
+| A single event object | That event object, unchanged. |
+| A JSON array of events | A JSON array of the valid events, in the order Max sent them. This is an array even if only one event in it is valid. |
+
+- `ping` events are not relayed.
+- Invalid events are left out of the array.
+- If a frame has no events to relay, the server sends nothing to the audience.
+
+A client must therefore accept both a single event object and an array of events. Events in an array are not grouped in any other way. Each one is scheduled and executed independently, according to the timing rules below.
 
 ## Timing and ordering
 
