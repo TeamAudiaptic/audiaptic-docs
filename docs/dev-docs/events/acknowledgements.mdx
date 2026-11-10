@@ -1,0 +1,103 @@
+---
+sidebar_position: 13
+---
+
+# Acknowledgements
+
+The server answers every [frame](./shared-envelope#frames) Max sends with exactly one acknowledgement (ack). The ack has the same shape whether the frame held one event or a list of events.
+
+## Ack shape
+
+```json
+{
+  "type": "ack",
+  "status": 207,
+  "accepted": ["evt-1", "evt-3"],
+  "rejected": [
+    {
+      "index": 1,
+      "eventId": "evt-2",
+      "errors": ["Field payload.assetAlias - Invalid input: expected string, received undefined"]
+    }
+  ],
+  "deliveredTo": 42,
+  "errors": []
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `type` | string | Always `"ack"`. |
+| `status` | integer | The outcome of the frame. See [Status](#status). |
+| `accepted` | string[] | The `eventId` of each event that passed validation, in frame order. This includes `ping` events, which are never relayed. |
+| `rejected` | object[] | One entry for each event that failed validation, in frame order. |
+| `rejected[].index` | integer | The event's zero-based position in the frame. A single event that was not sent in a list has index `0`. |
+| `rejected[].eventId` | string or `null` | The event's `eventId`, or `null` if it could not be read. |
+| `rejected[].errors` | string[] | Why the event was rejected. |
+| `deliveredTo` | integer | The number of audience devices the frame was sent to. `0` when nothing was relayed or no devices are connected. |
+| `errors` | string[] | Problems with the frame as a whole, rather than with one event. |
+
+`accepted` and `rejected` are always present and may be empty. When a frame-level problem stops the server from reading the events, both are empty and the reason is in `errors`.
+
+Use `index` to find a rejected event. An event can be rejected for repeating an earlier `eventId` in the same frame, so the `eventId` alone does not always identify it.
+
+## Status
+
+The server checks these conditions in order and uses the first that applies:
+
+| Order | Status | When | Relayed to the audience |
+| --- | --- | --- | --- |
+| 1 | `400` | The frame is not valid JSON. | Nothing |
+| 2 | `422` | The frame is not an event object or an array, or the array is empty. Also used when no event in the frame is valid. | Nothing |
+| 3 | `500` | The events were valid, but the server failed to send them to the audience. The valid events are still listed in `accepted`, and the reason is in `errors`. | Nothing, or not reliably |
+| 4 | `207` | Partial success: some events were accepted and some were rejected. | The valid show events, if any |
+| 5 | `202` | Every event was valid, and at least one show event was relayed. | Every event except `ping` |
+| 6 | `200` | Every event was valid, and there was nothing to relay, for example a frame containing only `ping` events. | Nothing |
+
+`202` only means the server sent the frame. Check `deliveredTo` to see how many devices it reached. If one device's connection fails during sending, the server skips that device and does not report a `500`.
+
+## Matching acks to frames
+
+Acks do not carry an identifier for the frame. The server answers frames in the order it receives them, so the first ack Max receives belongs to the first frame Max sent, and so on.
+
+## Oversized frames
+
+The server does not limit frame size or the number of events in a list. The WebSocket library it uses has a default limit of 100 MiB (104,857,600 bytes): a larger frame closes the connection with close code `1009` (message too big) and is not acknowledged. To send more than that, split it into several frames.
+
+## Examples
+
+A single valid show event:
+
+```json
+{ "type": "ack", "status": 202, "accepted": ["evt-1"], "rejected": [], "deliveredTo": 42, "errors": [] }
+```
+
+A list in which every event is invalid:
+
+```json
+{
+  "type": "ack",
+  "status": 422,
+  "accepted": [],
+  "rejected": [
+    { "index": 0, "eventId": null, "errors": ["Field eventId - Invalid input: expected string, received undefined"] },
+    { "index": 1, "eventId": "evt-2", "errors": ["Field type - Invalid input"] }
+  ],
+  "deliveredTo": 0,
+  "errors": []
+}
+```
+
+An empty list:
+
+```json
+{ "type": "ack", "status": 422, "accepted": [], "rejected": [], "deliveredTo": 0, "errors": ["A frame must contain at least one event."] }
+```
+
+A frame that is not valid JSON:
+
+```json
+{ "type": "ack", "status": 400, "accepted": [], "rejected": [], "deliveredTo": 0, "errors": ["The frame is not valid JSON."] }
+```
+
+The `errors` text in these examples is illustrative. Max should base its behavior on `status`, `index`, and `eventId`, not on the wording of error messages.

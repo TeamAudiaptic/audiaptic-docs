@@ -61,7 +61,7 @@ Performance-specific data is temporary and may be removed when a performance is 
 ## Timing and synchronization
 
 1. Max produces an event with an execution time: an `epochTimestamp`, a `relativeTimestamp`, or neither for an immediate, unsynchronized effect.
-2. The performance container relays the event to the active audience devices as soon as it receives it.
+2. The performance container relays the event to the active audience devices as soon as it receives it. Max can send one event or a list of events in a single message, and devices receive the same form: a single event, or a list of the valid events. See [Frames](../events/shared-envelope#frames).
 3. Each client queues and executes the event at the indicated time.
 
 This separates network delivery from effect execution, which is the basis for synchronization across the audience.
