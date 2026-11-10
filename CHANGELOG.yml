@@ -153,3 +153,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Updated proposed schema for the time endpoint
+- id: 14
+  pr: 63
+  author: Josh-mitch
+  time: '2026-11-10T23:07:29+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/63
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Bulk event sending schema updates
