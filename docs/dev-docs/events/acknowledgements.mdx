@@ -48,7 +48,7 @@ The server checks these conditions in order and uses the first that applies:
 | Order | Status | When | Relayed to the audience |
 | --- | --- | --- | --- |
 | 1 | `400` | The frame is not valid JSON. | Nothing |
-| 2 | `422` | The frame is not an event object or an array, the array is empty, or it has more events than the limit (500 by default). Also used when no event in the frame is valid. | Nothing |
+| 2 | `422` | The frame is not an event object or an array, or the array is empty. Also used when no event in the frame is valid. | Nothing |
 | 3 | `500` | The events were valid, but the server failed to send them to the audience. The valid events are still listed in `accepted`, and the reason is in `errors`. | Nothing, or not reliably |
 | 4 | `207` | Partial success: some events were accepted and some were rejected. | The valid show events, if any |
 | 5 | `202` | Every event was valid, and at least one show event was relayed. | Every event except `ping` |
@@ -62,9 +62,7 @@ Acks do not carry an identifier for the frame. The server answers frames in the 
 
 ## Oversized frames
 
-As a safeguard against a runaway frame, for example from a patch stuck in a loop, the server closes the WebSocket connection with close code `1009` (message too big) when a frame is larger than the size limit, 8 MiB (8,388,608 bytes) by default. The frame is not acknowledged.
-
-A valid frame never reaches this limit: the server will not start with a size limit too small to hold the event limit's worth of events, even with every field at its maximum length. A frame with too many events gets a `422` ack instead. To send a timeline longer than the event limit, split it into several frames.
+The server does not limit frame size or the number of events in a list. The WebSocket library it uses has a default limit of 100 MiB (104,857,600 bytes): a larger frame closes the connection with close code `1009` (message too big) and is not acknowledged. To send more than that, split it into several frames.
 
 ## Examples
 
@@ -93,7 +91,7 @@ A list in which every event is invalid:
 An empty list:
 
 ```json
-{ "type": "ack", "status": 422, "accepted": [], "rejected": [], "deliveredTo": 0, "errors": ["A frame must contain between 1 and 500 events."] }
+{ "type": "ack", "status": 422, "accepted": [], "rejected": [], "deliveredTo": 0, "errors": ["A frame must contain at least one event."] }
 ```
 
 A frame that is not valid JSON:

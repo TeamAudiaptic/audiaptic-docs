@@ -61,12 +61,12 @@ The array example leaves out timestamps and payload fields to stay short; each e
 
 | Rule | Value |
 | --- | --- |
-| Events per frame | 1 to 500 by default. An empty list or a list over the limit is rejected. |
-| Frame size | No practical limit for a valid frame. The event limit is the one Max will reach. A server safeguard closes the connection for a frame over 8 MiB by default, far larger than any valid list. See [Acknowledgements](./acknowledgements#oversized-frames). |
+| Events per frame | At least 1. An empty list is rejected. The server sets no maximum. |
+| Frame size | The server sets no limit of its own. The WebSocket library closes the connection for a frame over 100 MiB. See [Acknowledgements](./acknowledgements#oversized-frames). |
 | Order | The server processes a list in order and keeps that order when relaying it. |
 | Duplicate `eventId` | Within one frame, the first event with an `eventId` is processed and any later event with the same `eventId` is rejected. Duplicates are not yet checked across frames or across a performance. |
 
-Both limits are server settings (`MAX_EVENTS_PER_FRAME` and `MAX_FRAME_BYTES`), so a deployment can change them. The server refuses to start if the size limit is too small for the event limit, so a valid frame can never close the connection.
+How large a frame to send is the performer's decision. A large list takes longer for the server to validate and relay and for each device to parse, and the performer's next frame waits until the server has finished with it. Splitting a long timeline into several frames keeps each one quick.
 
 The server validates and acknowledges a single event exactly like a list containing one event. The only difference is what audience devices receive.
 
