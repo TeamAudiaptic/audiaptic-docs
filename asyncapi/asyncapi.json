@@ -27,7 +27,7 @@
     "performer": {
       "address": "/performer",
       "title": "Performer",
-      "description": "The performer sends show events; every event frame is answered with one ack.",
+      "description": "The performer sends one event or a list of events per frame; every frame is answered with exactly one ack, in the order the frames arrived. The server sets no event or size limit of its own; a frame over the WebSocket library's 100 MiB default closes the socket with close code 1009 instead of being acked.",
       "messages": {
         "audioEvent": {
           "$ref": "#/components/messages/audioEvent"
@@ -44,9 +44,6 @@
         "imageEvent": {
           "$ref": "#/components/messages/imageEvent"
         },
-        "pingEvent": {
-          "$ref": "#/components/messages/pingEvent"
-        },
         "startEvent": {
           "$ref": "#/components/messages/startEvent"
         },
@@ -56,27 +53,21 @@
         "videoEvent": {
           "$ref": "#/components/messages/videoEvent"
         },
-        "ack200": {
-          "$ref": "#/components/messages/ack200"
+        "pingEvent": {
+          "$ref": "#/components/messages/pingEvent"
         },
-        "ack202": {
-          "$ref": "#/components/messages/ack202"
+        "eventList": {
+          "$ref": "#/components/messages/eventList"
         },
-        "ack400": {
-          "$ref": "#/components/messages/ack400"
-        },
-        "ack422": {
-          "$ref": "#/components/messages/ack422"
-        },
-        "ack500": {
-          "$ref": "#/components/messages/ack500"
+        "ack": {
+          "$ref": "#/components/messages/ack"
         }
       }
     },
     "audience": {
       "address": "/audience/{code}",
       "title": "Audience",
-      "description": "Audience devices will receive the show events the performer sends, unchanged, once each event type is implemented. Devices send nothing back yet. If the join code is invalid, the server closes the socket with close code 4404 and reason \"Invalid join code\".",
+      "description": "Audience devices receive the valid show events from each performer frame in the form the performer sent them: a single event, or a list. Devices send nothing back yet. If the join code is invalid, the server closes the socket with close code 4404 and reason \"Invalid join code\".",
       "parameters": {
         "code": {
           "description": "The performance join code. Only `davhi` is valid for now."
@@ -106,6 +97,9 @@
         },
         "videoEvent": {
           "$ref": "#/components/messages/videoEvent"
+        },
+        "audienceEventList": {
+          "$ref": "#/components/messages/audienceEventList"
         }
       }
     }
@@ -113,8 +107,8 @@
   "operations": {
     "performerSendsEvent": {
       "action": "receive",
-      "title": "Send an event",
-      "summary": "Performer → server: a show event.",
+      "title": "Send events",
+      "summary": "Performer → server: one event, or a list of events.",
       "channel": {
         "$ref": "#/channels/performer"
       },
@@ -135,9 +129,6 @@
           "$ref": "#/channels/performer/messages/imageEvent"
         },
         {
-          "$ref": "#/channels/performer/messages/pingEvent"
-        },
-        {
           "$ref": "#/channels/performer/messages/startEvent"
         },
         {
@@ -145,6 +136,12 @@
         },
         {
           "$ref": "#/channels/performer/messages/videoEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/pingEvent"
+        },
+        {
+          "$ref": "#/channels/performer/messages/eventList"
         }
       ],
       "tags": [
@@ -156,25 +153,13 @@
     "performerReceivesAck": {
       "action": "send",
       "title": "Receive an ack",
-      "summary": "Server → performer: exactly one ack per event frame.",
+      "summary": "Server → performer: exactly one ack per frame.",
       "channel": {
         "$ref": "#/channels/performer"
       },
       "messages": [
         {
-          "$ref": "#/channels/performer/messages/ack200"
-        },
-        {
-          "$ref": "#/channels/performer/messages/ack202"
-        },
-        {
-          "$ref": "#/channels/performer/messages/ack400"
-        },
-        {
-          "$ref": "#/channels/performer/messages/ack422"
-        },
-        {
-          "$ref": "#/channels/performer/messages/ack500"
+          "$ref": "#/channels/performer/messages/ack"
         }
       ],
       "tags": [
@@ -185,8 +170,8 @@
     },
     "audienceReceivesEvent": {
       "action": "send",
-      "title": "Receive an event",
-      "summary": "Server → audience: a show event relayed from the performer.",
+      "title": "Receive events",
+      "summary": "Server → audience: a show event, or a list of them, relayed from the performer.",
       "channel": {
         "$ref": "#/channels/audience"
       },
@@ -214,6 +199,9 @@
         },
         {
           "$ref": "#/channels/audience/messages/videoEvent"
+        },
+        {
+          "$ref": "#/channels/audience/messages/audienceEventList"
         }
       ],
       "tags": [
@@ -251,9 +239,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -302,7 +297,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -335,9 +329,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -372,7 +373,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -405,9 +405,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -449,7 +456,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -482,9 +488,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -527,7 +540,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -560,9 +572,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -603,64 +622,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
-            "type",
-            "payload"
-          ],
-          "additionalProperties": false
-        }
-      },
-      "pingEvent": {
-        "name": "ping",
-        "title": "ping event",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "schemaVersion": {
-              "type": "string",
-              "const": "1.0"
-            },
-            "eventId": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            },
-            "sequence": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
-            },
-            "sentTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
-            },
-            "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
-            },
-            "relativeTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
-            },
-            "type": {
-              "type": "string",
-              "const": "ping"
-            },
-            "payload": {
-              "type": "object",
-              "properties": {},
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "schemaVersion",
-            "eventId",
-            "sequence",
-            "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -693,9 +654,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -717,7 +685,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type"
           ],
           "additionalProperties": false
@@ -749,9 +716,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -794,7 +768,6 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
@@ -827,9 +800,16 @@
               "maximum": 9007199254740991
             },
             "epochTimestamp": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "relativeTimestamp": {
               "type": "integer",
@@ -878,71 +858,772 @@
             "eventId",
             "sequence",
             "sentTimestamp",
-            "epochTimestamp",
             "type",
             "payload"
           ],
           "additionalProperties": false
         }
       },
-      "ack200": {
-        "name": "ack 200",
-        "title": "Ack 200",
-        "summary": "Understood.",
+      "pingEvent": {
+        "name": "ping",
+        "title": "ping event",
         "payload": {
           "type": "object",
           "properties": {
-            "type": {
+            "schemaVersion": {
               "type": "string",
-              "const": "ack"
+              "const": "1.0"
             },
             "eventId": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
             },
-            "status": {
-              "type": "number",
-              "const": 200
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sentTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "epochTimestamp": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "relativeTimestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "type": {
+              "type": "string",
+              "const": "ping"
+            },
+            "payload": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": false
             }
           },
           "required": [
-            "type",
+            "schemaVersion",
             "eventId",
-            "status"
+            "sequence",
+            "sentTimestamp",
+            "type",
+            "payload"
           ],
           "additionalProperties": false
         }
       },
-      "ack202": {
-        "name": "ack 202",
-        "title": "Ack 202",
-        "summary": "Accepted and fanned out to devices.",
+      "eventList": {
+        "name": "event list",
+        "title": "Event list",
+        "summary": "Performer → server: a non-empty list of events in one frame.",
+        "description": "Each event is validated on its own, so valid events are relayed even when others are rejected. An eventId already used earlier in the same frame is rejected.",
         "payload": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "ack"
-            },
-            "eventId": {
-              "type": "string"
-            },
-            "status": {
-              "type": "number",
-              "const": 202
-            }
-          },
-          "required": [
-            "type",
-            "eventId",
-            "status"
-          ],
-          "additionalProperties": false
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "audio"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "startOffsetMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "loop": {
+                        "type": "boolean"
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "caption"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "text"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "color"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "color",
+                      "durationMs",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "haptic"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "intensity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "intensity",
+                      "durationMs",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "image"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "start"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "torch"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "intensity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "durationMs",
+                      "intensity",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "video"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "startOffsetMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "loop": {
+                        "type": "boolean"
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "ping"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
         }
       },
-      "ack400": {
-        "name": "ack 400",
-        "title": "Ack 400",
-        "summary": "The frame was not parseable as JSON.",
+      "ack": {
+        "name": "ack",
+        "title": "Ack",
+        "summary": "Server → performer: exactly one ack per frame, whether it held one event or a list.",
+        "description": "The status is the first of these that applies:\n\n- `400`: The frame is not valid JSON.\n- `422`: The frame is not an event or a non-empty list of events, or no event in it is valid. Nothing was relayed.\n- `500`: The events were valid, but the server failed to send them to the audience.\n- `207`: Partial success: the valid show events were relayed, and the invalid ones are listed in `rejected`.\n- `202`: Every event was valid, and the show events were relayed.\n- `200`: Every event was valid, and there was nothing to relay (for example, only pings).",
         "payload": {
           "type": "object",
           "properties": {
@@ -950,14 +1631,60 @@
               "type": "string",
               "const": "ack"
             },
-            "eventId": {
-              "type": "string"
-            },
             "status": {
               "type": "number",
-              "const": 400
+              "enum": [
+                200,
+                202,
+                207,
+                400,
+                422,
+                500
+              ]
             },
-            "error": {
+            "accepted": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rejected": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "eventId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "errors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "index",
+                  "eventId",
+                  "errors"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "deliveredTo": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "errors": {
               "type": "array",
               "items": {
                 "type": "string"
@@ -966,79 +1693,646 @@
           },
           "required": [
             "type",
-            "eventId",
             "status",
-            "error"
+            "accepted",
+            "rejected",
+            "deliveredTo",
+            "errors"
           ],
           "additionalProperties": false
         }
       },
-      "ack422": {
-        "name": "ack 422",
-        "title": "Ack 422",
-        "summary": "Well-formed, but invalid for the schema or the session.",
+      "audienceEventList": {
+        "name": "audience event list",
+        "title": "Audience event list",
+        "summary": "Server → audience: the valid show events from a performer list, in frame order.",
+        "description": "Sent when the performer sent a list, even if only one of its events was valid.",
         "payload": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "ack"
-            },
-            "eventId": {
-              "type": "string"
-            },
-            "status": {
-              "type": "number",
-              "const": 422
-            },
-            "error": {
-              "type": "array",
-              "items": {
-                "type": "string"
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "audio"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "startOffsetMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "loop": {
+                        "type": "boolean"
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "caption"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "text"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "color"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "color",
+                      "durationMs",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "haptic"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "intensity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "intensity",
+                      "durationMs",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "image"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "start"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "torch"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "intensity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "durationMs",
+                      "intensity",
+                      "transitionMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0"
+                  },
+                  "eventId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "sentTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "epochTimestamp": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relativeTimestamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "video"
+                  },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "assetAlias": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "startOffsetMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "durationMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      },
+                      "loop": {
+                        "type": "boolean"
+                      },
+                      "transitionMs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 600000
+                      }
+                    },
+                    "required": [
+                      "assetAlias"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "schemaVersion",
+                  "eventId",
+                  "sequence",
+                  "sentTimestamp",
+                  "type",
+                  "payload"
+                ],
+                "additionalProperties": false
               }
-            }
-          },
-          "required": [
-            "type",
-            "eventId",
-            "status",
-            "error"
-          ],
-          "additionalProperties": false
-        }
-      },
-      "ack500": {
-        "name": "ack 500",
-        "title": "Ack 500",
-        "summary": "Accepted, but the server failed to distribute it.",
-        "payload": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "ack"
-            },
-            "eventId": {
-              "type": "string"
-            },
-            "status": {
-              "type": "number",
-              "const": 500
-            },
-            "error": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "required": [
-            "type",
-            "eventId",
-            "status",
-            "error"
-          ],
-          "additionalProperties": false
+            ]
+          }
         }
       }
     }
