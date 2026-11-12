@@ -1,0 +1,41 @@
+---
+slug: changelog-2026-11-12
+title: 'Changelog: November 12, 2026'
+authors: [Darren, Liam]
+tags: [changelog, changes-client, changes-server]
+date: 2026-11-12
+---
+
+**11 changes** across **2 repos** from **2 contributors**.
+
+{/* truncate */}
+
+## Server
+
+### Liam (@shackhorn)
+
+💥 **Breaking change** The portal and API now require a password, and the performer websocket requires a token. The Max team should use `dev` passed to the token query param when testing locally. Audience devices should still connect without one. [#60](https://github.com/TeamAudiaptic/audiaptic-server/pull/60)
+
+✨ **Feature** Production server auto-deployment is now active. The server redeploys from `main` every night at midnight Eastern, and on demand with the `audiaptic-redeploy` command on the server. [#60](https://github.com/TeamAudiaptic/audiaptic-server/pull/60)
+
+✨ **Feature** A Discord webhook receives deployment updates from the production server.\ [#60](https://github.com/TeamAudiaptic/audiaptic-server/pull/60)
+
+🔧 **Maintenance** Update Node from 20 to 24. [#60](https://github.com/TeamAudiaptic/audiaptic-server/pull/60)
+
+🔧 **Maintenance** The production containers now run as unprivileged users instead of root. [#60](https://github.com/TeamAudiaptic/audiaptic-server/pull/60)
+
+## Client
+
+### Darren (@dcr8024)
+
+💥 **Breaking change** Copy `.env.example` to `.env` and set `EXPO_PUBLIC_SERVER_URL` before running the app. `concertCode.json` now uses `concerts: [{ code, assetFolder }]` instead of `concertCodes`, and the join code for concert-1 is now `davhi`. [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
+
+✨ **Feature** Receive live performance events from the server's audience WebSocket, reconnecting automatically if the connection drops [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
+
+✨ **Feature** Show the server connection state (connecting, connected, reconnecting) during a concert [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
+
+✨ **Feature** Add `npm run send-test` to play a test session through the server [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
+
+🐛 **Fix** Accept the server's `execTimestamp` field so events relayed by the server play at the right time [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
+
+📝 **Documentation** Explain server configuration and `.env` setup in the README [#45](https://github.com/TeamAudiaptic/audiaptic-client/pull/45)
