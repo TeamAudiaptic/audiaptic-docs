@@ -68,7 +68,7 @@ This separates network delivery from effect execution, which is the basis for sy
 
 ### Epoch and relative time
 
-- An **`epochTimestamp`** is an absolute Unix-epoch time in milliseconds. Epoch scheduling remains the planned baseline and does not depend on any other event.
+- An **`epochTimestamp`** is an absolute Unix-epoch time in milliseconds, measured on the DAVHI server's clock. Max and each client keep an offset to that clock rather than relying on their own (see [Time Synchronization](../../spikes/time-sync)). Epoch scheduling remains the planned baseline and does not depend on any other event.
 - A **`relativeTimestamp`** is an offset in milliseconds from the execution time of the performance's [`start` event](../events/start). The `start` event anchors the performance timeline, so a pre-authored sequence can be expressed as offsets instead of being converted to epoch time in Max.
 - If an event carries both and the epoch time is in the future, the `epochTimestamp` takes precedence.
 
