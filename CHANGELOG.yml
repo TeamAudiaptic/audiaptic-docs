@@ -163,3 +163,13 @@ entries:
     emoji: 📝
     label: Documentation
     message: Bulk event sending schema updates
+- id: 15
+  pr: 65
+  author: Josh-mitch
+  time: '2026-11-17T22:01:31+00:00'
+  url: https://github.com/TeamAudiaptic/audiaptic-docs/pull/65
+  changes:
+  - type: docs
+    emoji: 📝
+    label: Documentation
+    message: Update sync plan to use monotonic clock
