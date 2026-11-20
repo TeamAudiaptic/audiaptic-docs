@@ -69,26 +69,24 @@ This separates network delivery from effect execution, which is the basis for sy
 ### Epoch and relative time
 
 - An **`epochTimestamp`** is an absolute Unix-epoch time in milliseconds, measured on the DAVHI server's clock. Max and each client keep an offset to that clock rather than relying on their own (see [Time Synchronization](../../spikes/time-sync)). Epoch scheduling remains the planned baseline and does not depend on any other event.
-- A **`relativeTimestamp`** is an offset in milliseconds from the execution time of the performance's [`start` event](../events/start). The `start` event anchors the performance timeline, so a pre-authored sequence can be expressed as offsets instead of being converted to epoch time in Max.
+- A **`relativeTimestamp`** is an offset in milliseconds from the `epochTimestamp` of the most recent [`start` event](../events/start). The `start` event anchors the performance timeline, so a pre-authored sequence can be expressed as offsets instead of being converted to epoch time in Max. The anchor is fixed when Max sends the `start`, not when a device receives it.
 - If an event carries both and the epoch time is in the future, the `epochTimestamp` takes precedence.
 
-### Start event constraints
+### Start events
 
-For the initial release:
+- **Max sends `start` with the events that depend on it**, usually first in a list. The server relays every `start` like any other event, and the client stores its `epochTimestamp` as the anchor for relative events.
+- **Relative events wait for their anchor.** A relative event that reaches a device before the `start` has executed is held and scheduled when it executes, whether the two arrive in one list or separate frames.
+- **A later `start` restarts the timeline.** A performance can have more than one `start`. Each device cancels the relative events that haven't played yet, and relative events sent after the new `start` count from it. Events timed by `epochTimestamp` and events already playing are not affected. The Max connection patch cues Max's own playback for every `start`.
 
-- A performance has **exactly one** `start` event. Restarting or re-anchoring the timeline with a second `start` is not supported.
-- A client must **receive the `start` event before** any event that uses a `relativeTimestamp`. A relative time has no meaning on a device that has not received the anchor.
+See the [`start` event](../events/start) page for the full rules.
 
-Max is responsible for sending `start` first. The server relays it like any other event, and the client stores its execution time as the anchor for later relative events.
+:::warning[Open question]
 
-:::warning[Open questions]
-
-- **Late joiners.** A device that joins after `start` was relayed has not received it. Whether the performance container replays the stored `start` to newly connected devices, or relative events are unusable for late joiners, is not yet decided.
-- **Invalid ordering.** How the server and client handle a relative event that arrives before `start`, or a second `start`, is not yet specified in [validation expectations](../events/validation).
+- **Late joiners.** A device that joins after `start` was relayed has not received it, so its relative events wait indefinitely. Whether the performance container replays the most recent `start` to newly connected devices is not yet decided.
 
 :::
 
-The [event pages](../events/shared-envelope) are the source of truth for this contract. The implementation-synced [WebSocket API](/websocket-api) has not caught up: it does not yet include `start`, `epochTimestamp`, or `relativeTimestamp`, and still uses `execTimestamp`. The server, client, and Max implementations should be updated to match the event pages.
+The [event pages](../events/shared-envelope) are the source of truth for this contract. The implementation-synced [WebSocket API](/websocket-api) shows what the server currently implements and may lag behind them; where they differ, the server, client, and Max implementations should be updated to match the event pages.
 
 ## Planned extensions
 
@@ -96,7 +94,6 @@ The [event pages](../events/shared-envelope) are the source of truth for this co
 - Audience-to-Max event flow and interactive audience input.
 - Zone configuration for effects targeted to portions of the audience.
 - Additional Max tooling, such as a timeline patch, for authoring effects as `relativeTimestamp` offsets against a predefined sequence, video, or audio track.
-- Multiple `start` events per performance, for restarting or re-anchoring the timeline.
 
 ## Source-of-truth boundaries
 

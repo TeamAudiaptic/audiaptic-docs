@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Start Event
 
-A `start` event indicates when a performance should start. Other event's relative timestamps are based on when the Start is executed. Start has no payload.
+A `start` event marks when a performance's timeline begins. Every event with a [`relativeTimestamp`](./shared-envelope) is executed that many milliseconds after the `start` event's `epochTimestamp`. Start has no payload.
 
 ```json
 {
@@ -16,3 +16,32 @@ A `start` event indicates when a performance should start. Other event's relativ
   "epochTimestamp": 1790000000000
 }
 ```
+
+## Timing
+
+The `start` event's `epochTimestamp` is the anchor for relative events. It is fixed when Max sends the `start`, so every device uses the same anchor, whenever it receives the `start` or the relative events.
+
+- **Always include an `epochTimestamp`.** A `start` without one is executed when each device processes it, which differs from device to device, so its timeline is not synchronized. The Max connection patch sets a `start`'s `epochTimestamp` to the current server time plus its universal delay, unless the patch supplies one.
+- **A `start` can't be relative to itself.** Its own `relativeTimestamp` is ignored.
+- **A past `epochTimestamp` still anchors the timeline.** A device that receives the `start` late lines up with every other device, and relative events that are already over are skipped.
+
+## Order of delivery
+
+The `start` and its relative events can arrive in the same [list](./shared-envelope#frames), usually with the `start` first, or in separate frames.
+
+- A relative event received before the `start` has executed waits on the device and is scheduled when the `start` executes.
+- Relative events that arrive before the performance's first `start` count from that first `start`.
+
+## Sending another start
+
+A performance can have more than one `start`. A later `start` replaces the previous timeline. When a device receives it:
+
+- Relative events that haven't started playing are cancelled. This includes relative events still waiting for the previous `start`, and the previous `start` itself if it hasn't executed yet.
+- Relative events received after the new `start` count from the new `start`, even if they arrive before it executes.
+- Events with a future `epochTimestamp`, events with no timestamp, and events already playing are not affected.
+
+The previous timeline stops when the new `start` is received, but the new timeline begins only when the new `start` executes, usually one universal delay later. Previous relative events that fall in that gap are not played.
+
+If one list holds more than one `start`, each replaces the one before it, in list order, so the last one is the timeline devices follow.
+
+The Max connection patch cues Max's own playback every time it sends a `start`, using the same `epochTimestamp`, so Max restarts with the devices.

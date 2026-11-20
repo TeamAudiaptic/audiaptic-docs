@@ -33,7 +33,7 @@ The system is intentionally session-oriented. It is meant for large, temporary e
 ## Architecture decisions to carry forward
 
 - The audience client is a **native React Native app** for Android and iOS, rather than the browser-only client described in the original proposal. This change enables the haptic and lighting functionality that could not be achieved reliably in iOS browsers.
-- Events carry an execution time, either an absolute Unix-epoch time or a time relative to the performance's single `start` event, and the mobile client is responsible for executing them at that time.
+- Events carry an execution time, either an absolute Unix-epoch time or a time relative to the performance's most recent `start` event, and the mobile client is responsible for executing them at that time.
 - Media belongs to a performance and is stored separately from the real-time event path.
 - A performance is isolated in its own container, which owns its connected Max instance, connected devices, and any performance-specific temporary persistence.
 

@@ -41,7 +41,7 @@ Every event has the following top-level shape:
 | `type` | string | Yes | One of the [supported event types](./event-types). |
 | `sentTimestamp` | integer | No | Unix epoch time in milliseconds, on the DAVHI server's clock, at which the event was sent by Max. |
 | `epochTimestamp` | integer | No | Unix epoch time in milliseconds, on the DAVHI server's clock, at which the client should execute the event. |
-| `relativeTimestamp` | integer | No | Time in milliseconds after recieving a [Start Event](./start) at which the client should execute the event. |
+| `relativeTimestamp` | integer | No | Time in milliseconds after the most recent [Start Event](./start)'s `epochTimestamp` at which the client should execute the event. |
 | `payload` | object | Yes | Properties specific to `type`. |
 
 The event envelope does not include a session ID: the server determines the session from the authenticated Max connection and distributes the event only within that session.
@@ -90,7 +90,7 @@ A client must therefore accept both a single event object and an array of events
 ## Timing and ordering
 
 - Epoch timestamps on the wire are on the DAVHI server's clock, not the clock of the device that produced or receives them. The Max connection patch converts timestamps from the performer's clock before sending, and each client converts to its own clock when scheduling. See [Time Synchronization](../../spikes/time-sync).
-- Timestamps can be either relative or epoch. Epoch timestamps are absolute, relative timestamps are based on a [Start Event](./start). If both are `null` or `0` the event takes place immediately. An epoch timestamp takes precedence over a relative timestamp if both are present and in the future.
+- Timestamps can be either relative or epoch. Epoch timestamps are absolute, relative timestamps are based on the most recent [Start Event](./start). If both are `null` or `0` the event takes place immediately. An epoch timestamp takes precedence over a relative timestamp if both are present and in the future.
 - Timestamped events should be sent sufficiently before their `epochTimestamp` for the server to relay and clients to queue them. A `null` or `0` timestamp is appropriate for an immediate effect, but is not synchronized across devices.
 - Clients execute each event independently. Multiple events with the same timestamp may therefore begin together (ex: a `haptic`, `screen`, and `caption` event).
 - When two events control the same output at the same timestamp, the higher `sequence` value takes precedence. A newer haptic replaces a haptic already playing; a newer screen event replaces the current screen effect.

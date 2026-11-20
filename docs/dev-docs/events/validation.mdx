@@ -17,3 +17,7 @@ When a [frame](./shared-envelope#frames) contains a list, the server validates e
 If the frame itself is unusable (it is not valid JSON, is not an event or array, or the array is empty), the server rejects the whole frame and relays nothing.
 
 The server reports the outcome of every frame in one [acknowledgement](./acknowledgements), which lists the accepted events and the errors for each rejected event.
+
+## Start events and ordering
+
+The server does not reject events for their order or number of [`start` events](./start). It relays every `start`, including a later one that restarts the timeline, and relays relative events whether or not a `start` was sent before them. Each device applies the ordering rules on the [`start` event](./start) page: a relative event waits for its `start`, and a later `start` cancels the relative events of the previous timeline that haven't played yet.

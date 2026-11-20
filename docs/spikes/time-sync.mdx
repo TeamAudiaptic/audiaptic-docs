@@ -211,7 +211,7 @@ export class APITime {
 - Set `Cache-Control: no-store`, so no proxy or client cache ever returns a stale time.
 - No authentication. The endpoint reveals nothing but the current time.
 - Leave the endpoint out of the request log, or log it at debug level only. A full audience re-syncing would otherwise flood the log.
-- Load is small. 1,000 phones sending a 6-request burst every 60 s is about 100 requests per second.
+- Load is small. 1,000 phones sending a burst every 60 s is about 50 requests per second on a steady network (3 requests per burst), and at most 100 (6 requests).
 - The host clock is shared by all containers, so the route returns the same reading whichever process serves it. This holds once multiple performance containers exist.
 
 ### Acceptance criteria
@@ -229,10 +229,13 @@ export class APITime {
 
 One **burst**:
 
-1. Send 6 sequential `GET /api/time` requests, each starting after the previous one returns.
+1. Send sequential `GET /api/time` requests, each starting after the previous one returns.
 2. For each, record `t1` just before sending and `t4` on receipt, then compute `offset` and `delay`.
 3. Discard the first sample (connection warm-up) and any failed or timed-out requests (2 s timeout).
-4. Keep the sample with the **lowest delay**. Its `offset` becomes the device offset, with `error = delay / 2`.
+4. **Stop early on a steady network:** stop as soon as a sample's delay is within 2 ms of the lowest delay among the earlier usable samples. More samples are then unlikely to find a faster round trip. Otherwise stop at 6 requests. A burst therefore takes 3 to 6 requests: 3 on a steady network, more when round trips vary.
+5. Keep the sample with the **lowest delay**. Its `offset` becomes the device offset, with `error = delay / 2`.
+
+The stopping rule compares round trips with each other rather than with a fixed value, because the fastest possible round trip depends on where the device is. Measured from one laptop to `davhi.se.rit.edu`, round trips after warm-up stayed between about 46 and 58 ms, so a fixed cutoff such as 10 ms would never stop a burst early.
 
 Store `{ offset, error, syncedAt }`. Replace every use of `Date.now()` that compares against event time with a single `serverNow()` helper. That helper becomes the only clock the event processor uses. It returns `performance.now() + offset`.
 
@@ -329,7 +332,7 @@ Accuracy isn't guaranteed: Wi-Fi conditions dominate the error. Before relying o
 2. Put several phones (iOS and Android, Wi-Fi and cellular) side by side. Fire a `torch` or `color` event scheduled 2 s ahead, and record them with a high-frame-rate phone camera. 240 fps gives roughly 4 ms resolution.
 3. Repeat with the phones' clocks deliberately set seconds off, to show the offset, not the phone's clock, controls timing.
 
-If measured spread is too large, revisit in this order: more samples per burst, more frequent bursts, then the WebSocket transport.
+If measured spread is too large, revisit in this order: more samples per burst (a tighter stopping rule or a higher maximum), more frequent bursts, then the WebSocket transport.
 
 ## Open questions
 
